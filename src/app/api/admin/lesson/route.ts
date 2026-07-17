@@ -1,0 +1,10 @@
+import { Role } from "@prisma/client";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { requireRole } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+const schema = z.object({ unitId: z.string().cuid(), slug: z.string().regex(/^[a-z0-9-]+$/), title: z.string().trim().min(1).max(120), description: z.string().trim().min(1).max(500), order: z.number().int().min(1), estimatedMinutes: z.number().int().min(1).max(60) });
+export async function POST(request: Request) { const user = await requireRole([Role.EDITOR, Role.ADMIN]); const parsed = schema.safeParse(await request.json().catch(() => null)); if (!parsed.success) return NextResponse.json({ error: "INVALID_INPUT" }, { status: 400 }); const lesson = await prisma.lesson.create({ data: { ...parsed.data, status: "DRAFT" } }); await prisma.auditLog.create({ data: { actorId: user.id, action: "CREATED", entityType: "Lesson", entityId: lesson.id } }); return NextResponse.json({ lesson }, { status: 201 }); }
+export async function PUT(request: Request) { const user = await requireRole([Role.EDITOR, Role.ADMIN]); const parsed = schema.extend({ id: z.string().cuid() }).safeParse(await request.json().catch(() => null)); if (!parsed.success) return NextResponse.json({ error: "INVALID_INPUT" }, { status: 400 }); const { id, unitId: _unitId, ...data } = parsed.data; void _unitId; const lesson = await prisma.lesson.update({ where: { id }, data: { ...data, status: "DRAFT" } }); await prisma.auditLog.create({ data: { actorId: user.id, action: "UPDATED", entityType: "Lesson", entityId: id } }); return NextResponse.json({ lesson }); }
+export async function DELETE(request: Request) { const user = await requireRole([Role.ADMIN]); const parsed = z.object({ id: z.string().cuid() }).safeParse(await request.json().catch(() => null)); if (!parsed.success) return NextResponse.json({ error: "INVALID_INPUT" }, { status: 400 }); await prisma.lesson.delete({ where: { id: parsed.data.id } }); await prisma.auditLog.create({ data: { actorId: user.id, action: "DELETED", entityType: "Lesson", entityId: parsed.data.id } }); return NextResponse.json({ ok: true }); }

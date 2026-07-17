@@ -1,0 +1,331 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PARENT
+  EDITOR
+  ADMIN
+}
+
+enum ContentStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+}
+
+enum ActivityType {
+  FLASHCARD
+  MULTIPLE_CHOICE
+  MATCHING
+  LISTEN_CHOOSE
+  LISTEN_TYPE
+  SPEAK_REPEAT
+  SENTENCE
+  SHORT_WRITING
+}
+
+enum AttemptStatus {
+  STARTED
+  COMPLETED
+}
+
+enum AssetLicense {
+  OWNED
+  LICENSED
+  STOCK
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  name                String?
+  email               String               @unique
+  emailVerified       DateTime?
+  image               String?
+  passwordHash        String?
+  role                Role                 @default(PARENT)
+  sessionVersion      Int                  @default(0)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  accounts            Account[]
+  sessions            Session[]
+  learnerProfiles     LearnerProfile[]
+  contentRevisions    ContentRevision[]
+  auditLogs           AuditLog[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token           String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model LearnerProfile {
+  id              String             @id @default(cuid())
+  userId          String
+  displayName     String
+  birthYear       Int?
+  gradeId         String?
+  parentalConsent DateTime
+  active          Boolean            @default(true)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grade           Grade?             @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+  enrollments     Enrollment[]
+  attempts        ActivityAttempt[]
+  lessonProgress  LessonProgress[]
+  reviews         ReviewSchedule[]
+  events          ProductEvent[]
+
+  @@index([userId])
+  @@index([gradeId])
+}
+
+model Grade {
+  id              String           @id @default(cuid())
+  slug            String           @unique
+  name            String
+  level           String
+  description     String
+  order           Int
+  courses         Course[]
+  learnerProfiles LearnerProfile[]
+}
+
+model Course {
+  id          String        @id @default(cuid())
+  gradeId     String
+  slug        String
+  title       String
+  description String
+  order       Int
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  grade       Grade         @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  units       Unit[]
+  enrollments Enrollment[]
+
+  @@unique([gradeId, slug])
+  @@index([gradeId, status])
+}
+
+model Enrollment {
+  id               String         @id @default(cuid())
+  learnerProfileId String
+  courseId         String
+  enrolledAt       DateTime       @default(now())
+  learnerProfile   LearnerProfile @relation(fields: [learnerProfileId], references: [id], onDelete: Cascade)
+  course           Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerProfileId, courseId])
+}
+
+model Unit {
+  id          String        @id @default(cuid())
+  courseId    String
+  slug        String
+  title       String
+  theme       String
+  description String
+  imageUrl    String?
+  order       Int
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  course      Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+
+  @@unique([courseId, slug])
+  @@index([courseId, status, order])
+}
+
+model Lesson {
+  id          String        @id @default(cuid())
+  unitId      String
+  slug        String
+  title       String
+  description String
+  order       Int
+  status      ContentStatus @default(DRAFT)
+  estimatedMinutes Int      @default(7)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  unit        Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  activities  Activity[]
+  progress    LessonProgress[]
+
+  @@unique([unitId, slug])
+  @@index([unitId, status, order])
+}
+
+model Activity {
+  id          String        @id @default(cuid())
+  lessonId    String
+  type        ActivityType
+  title       String
+  instruction String
+  payload     Json
+  order       Int
+  required    Boolean       @default(true)
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  lesson      Lesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  attempts    ActivityAttempt[]
+  reviews     ReviewSchedule[]
+
+  @@index([lessonId, status, order])
+}
+
+model ActivityAttempt {
+  id               String         @id @default(cuid())
+  learnerProfileId String
+  activityId       String
+  answer           Json?
+  score            Int
+  passed           Boolean
+  durationSeconds  Int            @default(0)
+  status           AttemptStatus  @default(COMPLETED)
+  createdAt        DateTime       @default(now())
+  learnerProfile   LearnerProfile @relation(fields: [learnerProfileId], references: [id], onDelete: Cascade)
+  activity         Activity       @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([learnerProfileId, activityId, createdAt])
+}
+
+model LessonProgress {
+  id                 String         @id @default(cuid())
+  learnerProfileId   String
+  lessonId           String
+  percent            Int            @default(0)
+  bestScore          Int            @default(0)
+  completedAt        DateTime?
+  lastActivityAt     DateTime        @default(now())
+  learnerProfile     LearnerProfile  @relation(fields: [learnerProfileId], references: [id], onDelete: Cascade)
+  lesson             Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerProfileId, lessonId])
+  @@index([learnerProfileId, lastActivityAt])
+}
+
+model ReviewSchedule {
+  id               String         @id @default(cuid())
+  learnerProfileId String
+  activityId       String
+  dueAt            DateTime
+  intervalIndex    Int            @default(0)
+  completedCount   Int            @default(0)
+  lastScore        Int?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  learnerProfile   LearnerProfile @relation(fields: [learnerProfileId], references: [id], onDelete: Cascade)
+  activity         Activity       @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerProfileId, activityId])
+  @@index([learnerProfileId, dueAt])
+}
+
+model Asset {
+  id          String       @id @default(cuid())
+  url         String       @unique
+  pathname    String
+  contentType String
+  altText     String
+  source      String
+  license     AssetLicense
+  width       Int?
+  height      Int?
+  createdAt   DateTime     @default(now())
+}
+
+model ContentRevision {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  snapshot   Json
+  note       String?
+  authorId   String
+  createdAt  DateTime @default(now())
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model ProductEvent {
+  id               String          @id @default(cuid())
+  learnerProfileId String?
+  name             String
+  entityType       String?
+  entityId         String?
+  metadata         Json?
+  createdAt        DateTime        @default(now())
+  learnerProfile   LearnerProfile? @relation(fields: [learnerProfileId], references: [id], onDelete: SetNull)
+
+  @@index([name, createdAt])
+  @@index([learnerProfileId, createdAt])
+}
