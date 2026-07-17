@@ -1,7 +1,7 @@
-import { ActivityType, ContentStatus, PrismaClient, Role } from "@prisma/client";
+import { ActivityType, ContentStatus, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { prisma } from "../src/lib/prisma";
 
-const prisma = new PrismaClient();
 const PUBLISHED = ContentStatus.PUBLISHED;
 const imageUrl = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80";
 

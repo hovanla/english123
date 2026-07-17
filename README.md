@@ -32,7 +32,7 @@ npm run local:setup
 npm run dev
 ```
 
-`local:setup` tạo lại dữ liệu mẫu nên chỉ chạy khi muốn khởi tạo/reset database local. Những lần sau chỉ cần `npm run dev`.
+`local:setup` tạo lại dữ liệu mẫu nên chỉ chạy khi muốn khởi tạo/reset database local. Những lần sau chỉ cần `npm run dev`; lệnh này không generate lại Prisma engine nên có thể khởi động an toàn trên Windows.
 
 ## Chạy production với PostgreSQL
 
