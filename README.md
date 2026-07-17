@@ -14,7 +14,27 @@ Nền tảng tự học tiếng Anh K–12 dành cho học sinh Việt Nam. Bả
 - Đặt lại mật khẩu bằng token 30 phút và email transactional.
 - Analytics pilot không lưu bài viết hoặc bản ghi âm.
 
-## Chạy local với PostgreSQL
+## Chạy local nhanh bằng SQLite
+
+Môi trường phát triển không yêu cầu cài PostgreSQL. Tạo `.env` với:
+
+```env
+DATABASE_URL="file:./dev.db"
+AUTH_SECRET="english123-local-development-secret-change-in-production"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+Khởi tạo database local lần đầu rồi chạy ứng dụng:
+
+```bash
+npm install
+npm run local:setup
+npm run dev
+```
+
+`local:setup` tạo lại dữ liệu mẫu nên chỉ chạy khi muốn khởi tạo/reset database local. Những lần sau chỉ cần `npm run dev`.
+
+## Chạy production với PostgreSQL
 
 Yêu cầu Node.js 20+ và PostgreSQL. Sao chép `.env.example` thành `.env`, sau đó điền ít nhất:
 
@@ -26,7 +46,7 @@ BOOTSTRAP_ADMIN_EMAIL="admin@example.com"
 BOOTSTRAP_ADMIN_PASSWORD="a-strong-password"
 ```
 
-Khởi tạo ứng dụng:
+Khởi tạo database production:
 
 ```bash
 npm install

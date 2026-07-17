@@ -2,12 +2,19 @@
   "name": "english123",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=20" },
-  "overrides": { "postcss": "8.5.19" },
+  "engines": {
+    "node": ">=20"
+  },
+  "overrides": {
+    "postcss": "8.5.19"
+  },
   "scripts": {
-    "dev": "next dev",
+    "dev": "prisma generate --schema prisma/schema.local.prisma && next dev",
+    "local:setup": "prisma generate --schema prisma/schema.local.prisma && prisma db push --schema prisma/schema.local.prisma --force-reset && npm run db:seed",
     "postinstall": "prisma generate",
+    "prebuild": "prisma generate",
     "build": "next build",
+    "prestart": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
@@ -16,6 +23,7 @@
     "db:legacy": "tsx scripts/migrate-legacy.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "db:studio:local": "prisma studio --schema prisma/schema.local.prisma",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -23,7 +31,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.19.3",
     "@vercel/blob": "^2.6.1",
     "bcryptjs": "^3.0.3",
     "next": "16.2.10",
@@ -45,7 +53,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
-    "prisma": "^5.22.0",
+    "prisma": "^6.19.3",
     "sql.js": "^1.14.1",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
