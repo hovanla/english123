@@ -2,7 +2,17 @@ import { ActivityType, Prisma } from "@prisma/client";
 import { z } from "zod";
 
 const optionSchema = z.object({ id: z.string().min(1), text: z.string().min(1) });
-const basePrompt = { prompt: z.string().min(1), explanation: z.string().optional(), imageUrl: z.string().url().optional(), audioUrl: z.string().url().optional() };
+const basePrompt = {
+  prompt: z.string().min(1),
+  explanation: z.string().optional(),
+  modelAnswer: z.string().optional(),
+  scenario: z.string().optional(),
+  visual: z.string().optional(),
+  imageUrl: z.string().min(1).optional(),
+  imageAlt: z.string().optional(),
+  audioUrl: z.string().min(1).optional(),
+  mode: z.enum(["VISUAL_GUESS", "STANDARD"]).optional(),
+};
 
 export const activityPayloadSchemas = {
   FLASHCARD: z.object({ ...basePrompt, front: z.string().min(1), back: z.string().min(1), example: z.string().optional() }),

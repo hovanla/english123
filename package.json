@@ -22,6 +22,7 @@
     "db:generate": "prisma generate",
     "db:legacy": "tsx scripts/migrate-legacy.ts",
     "db:seed": "tsx prisma/seed.ts",
+    "db:sync-preschool": "tsx scripts/sync-preschool-content.ts",
     "db:studio": "prisma studio",
     "db:studio:local": "prisma studio --schema prisma/schema.local.prisma",
     "test": "vitest run",

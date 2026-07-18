@@ -1,6 +1,7 @@
-import { ActivityType, ContentStatus, Role } from "@prisma/client";
+import { ActivityType, ContentStatus, Prisma, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
+import { buildPreschoolLessons, preschoolImageUrl } from "../src/lib/preschool-content";
 
 const PUBLISHED = ContentStatus.PUBLISHED;
 const imageUrl = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80";
@@ -28,7 +29,7 @@ type UnitSeed = {
 };
 
 const preschoolUnits: UnitSeed[] = [
-  { grade: "mam-non", slug: "hello", title: "Hello", theme: "Xin chào", description: "Làm quen lời chào, chữ A và số 1.", letters: ["A"], number: 1, words: [["hello", "xin chào"], ["hi", "chào bạn"], ["bye", "tạm biệt"], ["friend", "người bạn"]], sentence: ["Hello, my friend!", "Xin chào, bạn của mình!"], writing: "Nói lời chào với một người bạn." },
+  { grade: "mam-non", slug: "hello", title: "Hello", theme: "Xin chào", description: "Làm quen lời chào, chữ A và số 1.", letters: ["A"], number: 1, words: [["hello", "xin chào"], ["hi", "chào bạn"], ["goodbye", "tạm biệt"], ["friend", "người bạn"]], sentence: ["Hello, my friend!", "Xin chào, bạn của mình!"], writing: "Nói lời chào với một người bạn." },
   { grade: "mam-non", slug: "family", title: "Family", theme: "Gia đình", description: "Gọi tên người thân và làm quen chữ B.", letters: ["B"], words: [["mother", "mẹ"], ["father", "bố"], ["baby", "em bé"], ["family", "gia đình"]], sentence: ["This is my family.", "Đây là gia đình của mình."], writing: "Giới thiệu một người trong gia đình." },
   { grade: "mam-non", slug: "school", title: "School", theme: "Trường học", description: "Khám phá đồ dùng ở trường, chữ C và số 2.", letters: ["C"], number: 2, words: [["school", "trường học"], ["class", "lớp học"], ["book", "quyển sách"], ["crayon", "bút sáp"]], sentence: ["I have two books.", "Mình có hai quyển sách."], writing: "Chỉ và gọi tên một đồ dùng học tập." },
   { grade: "mam-non", slug: "feelings", title: "Feelings", theme: "Cảm xúc", description: "Nhận biết cảm xúc và làm quen chữ D.", letters: ["D"], words: [["happy", "vui"], ["sad", "buồn"], ["tired", "mệt"], ["angry", "giận"]], sentence: ["I am happy today.", "Hôm nay mình rất vui."], writing: "Nói cảm xúc của em hôm nay." },
@@ -63,34 +64,6 @@ const units: UnitSeed[] = [
   { grade: "lop-5", slug: "healthy-habits", title: "Healthy Habits", theme: "Thói quen lành mạnh", description: "Nói về cách giữ cơ thể khỏe mạnh.", words: [["exercise", "tập thể dục"], ["healthy", "khỏe mạnh"], ["vegetable", "rau củ"], ["rest", "nghỉ ngơi"]], sentence: ["You should exercise every day.", "Bạn nên tập thể dục mỗi ngày."], writing: "Viết ba lời khuyên để sống khỏe." },
   { grade: "lop-5", slug: "future-dreams", title: "Future Dreams", theme: "Ước mơ", description: "Nói về nghề nghiệp và ước mơ.", words: [["doctor", "bác sĩ"], ["teacher", "giáo viên"], ["engineer", "kỹ sư"], ["artist", "họa sĩ"]], sentence: ["I want to be a teacher.", "Mình muốn trở thành giáo viên."], writing: "Viết về nghề nghiệp em mơ ước." },
 ];
-
-function preschoolActivitiesFor(unit: UnitSeed) {
-  const [sentence, translation] = unit.sentence;
-  const letters = unit.letters || [];
-  const otherLetters = ["A", "B", "C", "D"].filter((letter) => !letters.includes(letter)).slice(0, 2);
-  return [
-    {
-      slug: "chu-cai-chu-so", title: "Letters & Numbers", description: "Nhìn, nghe và nhận biết chữ cái, chữ số.", activities: [
-        ...letters.map((letter, index) => ({ type: ActivityType.FLASHCARD, title: `Letter ${letter}`, instruction: "Nhìn chữ, nghe tên chữ rồi đọc theo.", order: index + 1, payload: { prompt: `Đây là chữ ${letter}.`, front: `${letter} ${letter.toLowerCase()}`, back: `Letter ${letter}`, example: `${letter} is for ${unit.words[0][0]}.` } })),
-        ...(unit.number ? [{ type: ActivityType.FLASHCARD, title: `Number ${unit.number}`, instruction: "Đếm đồ vật và đọc số bằng tiếng Anh.", order: letters.length + 1, payload: { prompt: `Cùng đếm đến ${unit.number}.`, front: String(unit.number), back: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][unit.number], example: `I can count ${unit.number}.` } }] : []),
-        { type: ActivityType.MULTIPLE_CHOICE, title: "Tìm chữ đúng", instruction: "Chọn chữ cái em vừa học.", order: letters.length + (unit.number ? 2 : 1), payload: { prompt: `Đâu là chữ ${letters[0]}?`, options: [letters[0], ...otherLetters].map((text, index) => ({ id: index === 0 ? "correct" : `wrong-${index}`, text })), correctOptionId: "correct" } },
-      ],
-    },
-    {
-      slug: "words", title: "Words", description: "Học từ mới bằng thẻ và trò ghép cặp.", activities: [
-        ...unit.words.map(([word, meaning], index) => ({ type: ActivityType.FLASHCARD, title: `${word} — ${meaning}`, instruction: "Nghe, nhìn và đọc từ mới.", order: index + 1, payload: { prompt: `Cùng học từ ${word}.`, front: word, back: meaning, example: `This is ${word}.` } })),
-        { type: ActivityType.MATCHING, title: "Ghép từ với hình dung", instruction: "Ghép từ tiếng Anh với nghĩa đúng.", order: unit.words.length + 1, payload: { prompt: "Ghép đúng các từ trong chủ đề.", pairs: unit.words.map(([left, right]) => ({ left, right })) } },
-      ],
-    },
-    {
-      slug: "sentences-games", title: "Sentences & Games", description: "Nghe, nói mẫu câu và chơi trò chọn đáp án.", activities: [
-        { type: ActivityType.LISTEN_CHOOSE, title: "Nghe và chọn", instruction: "Bấm nghe rồi chọn đúng câu em nghe thấy.", order: 1, payload: { prompt: translation, text: sentence, options: [{ id: "correct", text: sentence }, { id: "wrong", text: "Good night, teacher." }], correctOptionId: "correct" } },
-        { type: ActivityType.SPEAK_REPEAT, title: "Nói theo", instruction: "Nghe và nói lại câu mẫu thật rõ.", order: 2, payload: { prompt: translation, target: sentence, translation } },
-        { type: ActivityType.MULTIPLE_CHOICE, title: "Chọn nghĩa đúng", instruction: "Chọn nghĩa phù hợp với câu tiếng Anh.", order: 3, payload: { prompt: sentence, options: [{ id: "correct", text: translation }, { id: "wrong-1", text: "Mình đang đi ngủ." }, { id: "wrong-2", text: "Hôm nay trời mưa." }], correctOptionId: "correct", explanation: translation } },
-      ],
-    },
-  ];
-}
 
 function activitiesFor(unit: UnitSeed) {
   const [sentence, translation] = unit.sentence;
@@ -149,11 +122,11 @@ async function main() {
   for (const unit of units) {
     const order = (orderByGrade.get(unit.grade) || 0) + 1;
     orderByGrade.set(unit.grade, order);
-    const lessons = unit.grade === "mam-non" ? preschoolActivitiesFor(unit) : activitiesFor(unit);
+    const lessons = unit.grade === "mam-non" ? buildPreschoolLessons(unit) : activitiesFor(unit);
     await prisma.unit.create({
       data: {
-        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, imageUrl, order, status: PUBLISHED,
-        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? 6 : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, status: PUBLISHED })) } })) },
+        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
+        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? 6 : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
       },
     });
   }
