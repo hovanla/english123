@@ -17,7 +17,7 @@ export function getPublishedUnit(gradeSlug: string, unitSlug: string) {
   return prisma.unit.findFirst({
     where: { slug: unitSlug, status: ContentStatus.PUBLISHED, course: { status: ContentStatus.PUBLISHED, grade: { slug: gradeSlug } } },
     include: {
-      course: { include: { grade: true } },
+      course: { include: { grade: true, units: { where: { status: ContentStatus.PUBLISHED }, orderBy: { order: "asc" }, select: { id: true, slug: true, title: true, theme: true, order: true } } } },
       lessons: {
         where: { status: ContentStatus.PUBLISHED }, orderBy: { order: "asc" },
         include: { activities: { where: { status: ContentStatus.PUBLISHED }, orderBy: { order: "asc" } } },

@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "local:setup": "prisma generate --schema prisma/schema.local.prisma && prisma db push --schema prisma/schema.local.prisma --force-reset && npm run db:seed",
+    "local:setup": "prisma db push --schema prisma/schema.local.prisma --force-reset --skip-generate && npm run db:seed",
     "postinstall": "prisma generate && prisma generate --schema prisma/schema.local.prisma",
     "prebuild": "prisma generate",
     "build": "next build",

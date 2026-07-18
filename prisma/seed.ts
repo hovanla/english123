@@ -24,9 +24,34 @@ const gradeShells = [
 type UnitSeed = {
   grade: string; slug: string; title: string; theme: string; description: string;
   words: Array<[string, string]>; sentence: [string, string]; writing: string;
+  letters?: string[]; number?: number;
 };
 
+const preschoolUnits: UnitSeed[] = [
+  { grade: "mam-non", slug: "hello", title: "Hello", theme: "Xin chào", description: "Làm quen lời chào, chữ A và số 1.", letters: ["A"], number: 1, words: [["hello", "xin chào"], ["hi", "chào bạn"], ["bye", "tạm biệt"], ["friend", "người bạn"]], sentence: ["Hello, my friend!", "Xin chào, bạn của mình!"], writing: "Nói lời chào với một người bạn." },
+  { grade: "mam-non", slug: "family", title: "Family", theme: "Gia đình", description: "Gọi tên người thân và làm quen chữ B.", letters: ["B"], words: [["mother", "mẹ"], ["father", "bố"], ["baby", "em bé"], ["family", "gia đình"]], sentence: ["This is my family.", "Đây là gia đình của mình."], writing: "Giới thiệu một người trong gia đình." },
+  { grade: "mam-non", slug: "school", title: "School", theme: "Trường học", description: "Khám phá đồ dùng ở trường, chữ C và số 2.", letters: ["C"], number: 2, words: [["school", "trường học"], ["class", "lớp học"], ["book", "quyển sách"], ["crayon", "bút sáp"]], sentence: ["I have two books.", "Mình có hai quyển sách."], writing: "Chỉ và gọi tên một đồ dùng học tập." },
+  { grade: "mam-non", slug: "feelings", title: "Feelings", theme: "Cảm xúc", description: "Nhận biết cảm xúc và làm quen chữ D.", letters: ["D"], words: [["happy", "vui"], ["sad", "buồn"], ["tired", "mệt"], ["angry", "giận"]], sentence: ["I am happy today.", "Hôm nay mình rất vui."], writing: "Nói cảm xúc của em hôm nay." },
+  { grade: "mam-non", slug: "toys", title: "Toys", theme: "Đồ chơi", description: "Gọi tên đồ chơi, chữ E và số 3.", letters: ["E"], number: 3, words: [["ball", "quả bóng"], ["doll", "búp bê"], ["kite", "cái diều"], ["train", "tàu đồ chơi"]], sentence: ["I have three toys.", "Mình có ba món đồ chơi."], writing: "Nói tên món đồ chơi em thích." },
+  { grade: "mam-non", slug: "colors", title: "Colors", theme: "Màu sắc", description: "Nhận biết màu cơ bản và làm quen chữ F.", letters: ["F"], words: [["red", "màu đỏ"], ["blue", "màu xanh dương"], ["yellow", "màu vàng"], ["green", "màu xanh lá"]], sentence: ["My kite is red.", "Cái diều của mình màu đỏ."], writing: "Chọn và nói màu em yêu thích." },
+  { grade: "mam-non", slug: "body", title: "Body", theme: "Cơ thể", description: "Gọi tên bộ phận cơ thể, chữ G và số 4.", letters: ["G"], number: 4, words: [["head", "đầu"], ["hand", "bàn tay"], ["leg", "chân"], ["foot", "bàn chân"]], sentence: ["I have two hands.", "Mình có hai bàn tay."], writing: "Chỉ vào một bộ phận cơ thể và gọi tên." },
+  { grade: "mam-non", slug: "face", title: "Face", theme: "Khuôn mặt", description: "Nhận biết các phần trên khuôn mặt và chữ H.", letters: ["H"], words: [["eye", "mắt"], ["ear", "tai"], ["nose", "mũi"], ["mouth", "miệng"]], sentence: ["These are my eyes.", "Đây là đôi mắt của mình."], writing: "Chỉ và gọi tên một phần trên khuôn mặt." },
+  { grade: "mam-non", slug: "shapes", title: "Shapes", theme: "Hình dạng", description: "Phân biệt hình dạng, chữ I và số 5.", letters: ["I"], number: 5, words: [["circle", "hình tròn"], ["square", "hình vuông"], ["triangle", "hình tam giác"], ["star", "hình ngôi sao"]], sentence: ["It is a yellow star.", "Đó là một ngôi sao màu vàng."], writing: "Tìm và gọi tên một hình dạng quanh em." },
+  { grade: "mam-non", slug: "clothes", title: "Clothes", theme: "Quần áo", description: "Gọi tên trang phục và làm quen chữ J.", letters: ["J"], words: [["shirt", "áo sơ mi"], ["dress", "váy"], ["shoes", "giày"], ["hat", "mũ"]], sentence: ["This is my blue hat.", "Đây là chiếc mũ màu xanh của mình."], writing: "Nói tên một món đồ em đang mặc." },
+  { grade: "mam-non", slug: "fruit", title: "Fruit", theme: "Trái cây", description: "Khám phá trái cây, chữ K và số 6.", letters: ["K"], number: 6, words: [["apple", "quả táo"], ["banana", "quả chuối"], ["orange", "quả cam"], ["grape", "quả nho"]], sentence: ["I like red apples.", "Mình thích những quả táo đỏ."], writing: "Nói tên loại quả em thích." },
+  { grade: "mam-non", slug: "drinks", title: "Drink", theme: "Đồ uống", description: "Gọi tên đồ uống và làm quen chữ L.", letters: ["L"], words: [["water", "nước"], ["milk", "sữa"], ["juice", "nước ép"], ["tea", "trà"]], sentence: ["I would like some milk.", "Mình muốn một ít sữa."], writing: "Chọn và nói đồ uống em thích." },
+  { grade: "mam-non", slug: "snacks", title: "Snack", theme: "Đồ ăn nhẹ", description: "Gọi tên món ăn nhẹ, chữ M và số 7.", letters: ["M"], number: 7, words: [["bread", "bánh mì"], ["cookie", "bánh quy"], ["cake", "bánh ngọt"], ["cheese", "phô mai"]], sentence: ["This cookie is yummy.", "Chiếc bánh quy này thật ngon."], writing: "Nói tên một món ăn nhẹ em biết." },
+  { grade: "mam-non", slug: "in-the-room", title: "In the Room", theme: "Trong phòng", description: "Khám phá đồ vật trong phòng và chữ N.", letters: ["N"], words: [["table", "cái bàn"], ["chair", "cái ghế"], ["bed", "cái giường"], ["lamp", "đèn bàn"]], sentence: ["The lamp is on the table.", "Đèn ở trên bàn."], writing: "Chỉ và gọi tên một đồ vật trong phòng." },
+  { grade: "mam-non", slug: "at-home", title: "At Home", theme: "Ở nhà", description: "Nói về hoạt động ở nhà, chữ O–P và số 8.", letters: ["O", "P"], number: 8, words: [["eat", "ăn"], ["sleep", "ngủ"], ["read", "đọc"], ["play", "chơi"]], sentence: ["I am reading at home.", "Mình đang đọc sách ở nhà."], writing: "Làm động tác và nói một hoạt động ở nhà." },
+  { grade: "mam-non", slug: "i-can", title: "I Can", theme: "Mình có thể", description: "Nói về khả năng và làm quen chữ Q–R.", letters: ["Q", "R"], words: [["run", "chạy"], ["jump", "nhảy"], ["sing", "hát"], ["dance", "nhảy múa"]], sentence: ["I can run and jump.", "Mình có thể chạy và nhảy."], writing: "Làm động tác và nói điều em có thể làm." },
+  { grade: "mam-non", slug: "pets", title: "Pet", theme: "Vật nuôi", description: "Gọi tên vật nuôi, chữ S–T và số 9.", letters: ["S", "T"], number: 9, words: [["dog", "con chó"], ["cat", "con mèo"], ["fish", "con cá"], ["bird", "con chim"]], sentence: ["My little cat can jump.", "Chú mèo nhỏ của mình có thể nhảy."], writing: "Nói tên một vật nuôi em thích." },
+  { grade: "mam-non", slug: "the-farm", title: "The Farm", theme: "Nông trại", description: "Khám phá con vật nông trại và chữ U–V.", letters: ["U", "V"], words: [["cow", "con bò"], ["duck", "con vịt"], ["pig", "con lợn"], ["sheep", "con cừu"]], sentence: ["The duck is on the farm.", "Con vịt ở trong nông trại."], writing: "Bắt chước tiếng và gọi tên một con vật." },
+  { grade: "mam-non", slug: "the-zoo", title: "The Zoo", theme: "Vườn thú", description: "Khám phá động vật hoang dã, chữ W–X và số 10.", letters: ["W", "X"], number: 10, words: [["lion", "sư tử"], ["tiger", "hổ"], ["monkey", "khỉ"], ["elephant", "voi"]], sentence: ["That is a big elephant.", "Đó là một chú voi to."], writing: "Nói tên một con vật trong vườn thú." },
+  { grade: "mam-non", slug: "the-park", title: "The Park", theme: "Công viên", description: "Vui chơi ở công viên và hoàn thành chữ Y–Z.", letters: ["Y", "Z"], words: [["slide", "cầu trượt"], ["swing", "xích đu"], ["tree", "cây"], ["flower", "bông hoa"]], sentence: ["Let us play in the park.", "Chúng mình cùng chơi trong công viên nhé."], writing: "Nói hoạt động em thích ở công viên." },
+];
+
 const units: UnitSeed[] = [
+  ...preschoolUnits,
   { grade: "lop-1", slug: "hello-friends", title: "Hello, Friends!", theme: "Chào hỏi", description: "Chào hỏi và giới thiệu bản thân.", words: [["hello", "xin chào"], ["friend", "người bạn"], ["name", "tên"], ["goodbye", "tạm biệt"]], sentence: ["My name is Lan.", "Tên mình là Lan."], writing: "Viết một câu giới thiệu tên của em." },
   { grade: "lop-1", slug: "colors-around-me", title: "Colors Around Me", theme: "Màu sắc", description: "Nhận biết màu sắc quanh em.", words: [["red", "màu đỏ"], ["blue", "màu xanh dương"], ["yellow", "màu vàng"], ["green", "màu xanh lá"]], sentence: ["It is a red ball.", "Đó là một quả bóng màu đỏ."], writing: "Viết một câu về màu em yêu thích." },
   { grade: "lop-2", slug: "my-family", title: "My Family", theme: "Gia đình", description: "Gọi tên và giới thiệu người thân.", words: [["mother", "mẹ"], ["father", "bố"], ["sister", "chị hoặc em gái"], ["brother", "anh hoặc em trai"]], sentence: ["This is my mother.", "Đây là mẹ của mình."], writing: "Viết hai câu ngắn về gia đình em." },
@@ -38,6 +63,34 @@ const units: UnitSeed[] = [
   { grade: "lop-5", slug: "healthy-habits", title: "Healthy Habits", theme: "Thói quen lành mạnh", description: "Nói về cách giữ cơ thể khỏe mạnh.", words: [["exercise", "tập thể dục"], ["healthy", "khỏe mạnh"], ["vegetable", "rau củ"], ["rest", "nghỉ ngơi"]], sentence: ["You should exercise every day.", "Bạn nên tập thể dục mỗi ngày."], writing: "Viết ba lời khuyên để sống khỏe." },
   { grade: "lop-5", slug: "future-dreams", title: "Future Dreams", theme: "Ước mơ", description: "Nói về nghề nghiệp và ước mơ.", words: [["doctor", "bác sĩ"], ["teacher", "giáo viên"], ["engineer", "kỹ sư"], ["artist", "họa sĩ"]], sentence: ["I want to be a teacher.", "Mình muốn trở thành giáo viên."], writing: "Viết về nghề nghiệp em mơ ước." },
 ];
+
+function preschoolActivitiesFor(unit: UnitSeed) {
+  const [sentence, translation] = unit.sentence;
+  const letters = unit.letters || [];
+  const otherLetters = ["A", "B", "C", "D"].filter((letter) => !letters.includes(letter)).slice(0, 2);
+  return [
+    {
+      slug: "chu-cai-chu-so", title: "Letters & Numbers", description: "Nhìn, nghe và nhận biết chữ cái, chữ số.", activities: [
+        ...letters.map((letter, index) => ({ type: ActivityType.FLASHCARD, title: `Letter ${letter}`, instruction: "Nhìn chữ, nghe tên chữ rồi đọc theo.", order: index + 1, payload: { prompt: `Đây là chữ ${letter}.`, front: `${letter} ${letter.toLowerCase()}`, back: `Letter ${letter}`, example: `${letter} is for ${unit.words[0][0]}.` } })),
+        ...(unit.number ? [{ type: ActivityType.FLASHCARD, title: `Number ${unit.number}`, instruction: "Đếm đồ vật và đọc số bằng tiếng Anh.", order: letters.length + 1, payload: { prompt: `Cùng đếm đến ${unit.number}.`, front: String(unit.number), back: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][unit.number], example: `I can count ${unit.number}.` } }] : []),
+        { type: ActivityType.MULTIPLE_CHOICE, title: "Tìm chữ đúng", instruction: "Chọn chữ cái em vừa học.", order: letters.length + (unit.number ? 2 : 1), payload: { prompt: `Đâu là chữ ${letters[0]}?`, options: [letters[0], ...otherLetters].map((text, index) => ({ id: index === 0 ? "correct" : `wrong-${index}`, text })), correctOptionId: "correct" } },
+      ],
+    },
+    {
+      slug: "words", title: "Words", description: "Học từ mới bằng thẻ và trò ghép cặp.", activities: [
+        ...unit.words.map(([word, meaning], index) => ({ type: ActivityType.FLASHCARD, title: `${word} — ${meaning}`, instruction: "Nghe, nhìn và đọc từ mới.", order: index + 1, payload: { prompt: `Cùng học từ ${word}.`, front: word, back: meaning, example: `This is ${word}.` } })),
+        { type: ActivityType.MATCHING, title: "Ghép từ với hình dung", instruction: "Ghép từ tiếng Anh với nghĩa đúng.", order: unit.words.length + 1, payload: { prompt: "Ghép đúng các từ trong chủ đề.", pairs: unit.words.map(([left, right]) => ({ left, right })) } },
+      ],
+    },
+    {
+      slug: "sentences-games", title: "Sentences & Games", description: "Nghe, nói mẫu câu và chơi trò chọn đáp án.", activities: [
+        { type: ActivityType.LISTEN_CHOOSE, title: "Nghe và chọn", instruction: "Bấm nghe rồi chọn đúng câu em nghe thấy.", order: 1, payload: { prompt: translation, text: sentence, options: [{ id: "correct", text: sentence }, { id: "wrong", text: "Good night, teacher." }], correctOptionId: "correct" } },
+        { type: ActivityType.SPEAK_REPEAT, title: "Nói theo", instruction: "Nghe và nói lại câu mẫu thật rõ.", order: 2, payload: { prompt: translation, target: sentence, translation } },
+        { type: ActivityType.MULTIPLE_CHOICE, title: "Chọn nghĩa đúng", instruction: "Chọn nghĩa phù hợp với câu tiếng Anh.", order: 3, payload: { prompt: sentence, options: [{ id: "correct", text: translation }, { id: "wrong-1", text: "Mình đang đi ngủ." }, { id: "wrong-2", text: "Hôm nay trời mưa." }], correctOptionId: "correct", explanation: translation } },
+      ],
+    },
+  ];
+}
 
 function activitiesFor(unit: UnitSeed) {
   const [sentence, translation] = unit.sentence;
@@ -84,17 +137,23 @@ async function main() {
   }
 
   const courses = new Map<string, string>();
+  const preschoolCourse = await prisma.course.create({ data: { gradeId: grades.get("mam-non")!, slug: "tieng-anh-mam-non", title: "Tiếng Anh Mầm non", description: "Lộ trình 20 unit cho trẻ 3–6 tuổi: chữ cái, chữ số, từ vựng, mẫu câu và trò chơi.", order: 1, status: PUBLISHED } });
+  courses.set("mam-non", preschoolCourse.id);
   for (let number = 1; number <= 5; number += 1) {
     const slug = `lop-${number}`;
     const course = await prisma.course.create({ data: { gradeId: grades.get(slug)!, slug: `tieng-anh-${slug}`, title: `Tiếng Anh Lớp ${number}`, description: `Lộ trình tiếng Anh nền tảng dành cho học sinh Lớp ${number}.`, order: 1, status: PUBLISHED } });
     courses.set(slug, course.id);
   }
 
-  for (const [index, unit] of units.entries()) {
+  const orderByGrade = new Map<string, number>();
+  for (const unit of units) {
+    const order = (orderByGrade.get(unit.grade) || 0) + 1;
+    orderByGrade.set(unit.grade, order);
+    const lessons = unit.grade === "mam-non" ? preschoolActivitiesFor(unit) : activitiesFor(unit);
     await prisma.unit.create({
       data: {
-        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, imageUrl, order: (index % 2) + 1, status: PUBLISHED,
-        lessons: { create: activitiesFor(unit).map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, status: PUBLISHED })) } })) },
+        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, imageUrl, order, status: PUBLISHED,
+        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? 6 : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, status: PUBLISHED })) } })) },
       },
     });
   }
@@ -106,7 +165,7 @@ async function main() {
       update: { role: Role.ADMIN, passwordHash: await bcrypt.hash(process.env.BOOTSTRAP_ADMIN_PASSWORD, 12) },
     });
   }
-  console.log(`Đã tạo ${gradeShells.length} cấp lớp, 5 khóa học và ${units.length} unit pilot.`);
+  console.log(`Đã tạo ${gradeShells.length} cấp lớp, 6 khóa học và ${units.length} unit (20 unit Mầm non).`);
 }
 
 main().finally(() => prisma.$disconnect());

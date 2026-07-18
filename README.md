@@ -1,9 +1,10 @@
 # English123
 
-Nền tảng tự học tiếng Anh K–12 dành cho học sinh Việt Nam. Bản pilot hiện tập trung Lớp 1–5 với 10 unit, 30 lesson và tám dạng hoạt động tương tác.
+Nền tảng tự học tiếng Anh K–12 dành cho học sinh Việt Nam. Bản hiện tại có lộ trình Mầm non 20 unit và Lớp 1–5 với 10 unit, tổng cộng 90 lesson cùng tám dạng hoạt động tương tác.
 
 ## Chức năng đã có
 
+- Lộ trình Mầm non 20 unit theo chuỗi chủ đề Hello → The Park, gồm Letters, Numbers, Words, Sentences và Games với nội dung tự biên soạn.
 - Tài khoản phụ huynh, nhiều hồ sơ học sinh và chọn lớp.
 - Phân quyền `PARENT`, `EDITOR`, `ADMIN` bằng Auth.js.
 - Cây nội dung `Grade → Course → Unit → Lesson → Activity` với trạng thái soạn–duyệt–xuất bản.
@@ -32,7 +33,7 @@ npm run local:setup
 npm run dev
 ```
 
-`local:setup` tạo lại dữ liệu mẫu nên chỉ chạy khi muốn khởi tạo/reset database local. Những lần sau chỉ cần `npm run dev`; lệnh này không generate lại Prisma engine nên có thể khởi động an toàn trên Windows.
+`local:setup` tạo lại dữ liệu mẫu nên chỉ chạy khi muốn khởi tạo/reset database local và phải dừng server dev trước. Những lần sau chỉ cần `npm run dev`; hai lệnh này không generate đè Prisma engine đang chạy trên Windows.
 
 ## Chạy production với PostgreSQL
 

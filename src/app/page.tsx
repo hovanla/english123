@@ -5,7 +5,7 @@ import { getPublishedGrades } from "@/lib/curriculum";
 export const dynamic = "force-dynamic";
 
 const groups = [
-  { title: "Khởi đầu", subtitle: "Mầm non", slugs: ["mam-non"], color: "bg-orange-50 border-orange-200" },
+  { title: "Khởi đầu", subtitle: "Mầm non · 20 unit cho trẻ 3–6 tuổi", slugs: ["mam-non"], color: "bg-orange-50 border-orange-200" },
   { title: "Tiểu học", subtitle: "Lớp 1–5 · Pilot đang mở", slugs: ["lop-1", "lop-2", "lop-3", "lop-4", "lop-5"], color: "bg-emerald-50 border-emerald-200" },
   { title: "Trung học", subtitle: "Lớp 6–12", slugs: ["lop-6", "lop-7", "lop-8", "lop-9", "lop-10", "lop-11", "lop-12"], color: "bg-sky-50 border-sky-200" },
 ];
@@ -35,10 +35,10 @@ export default async function Home() {
           </div>
         </div>
         <aside className="rounded-[2rem] border border-[#dbe7df] bg-white p-7 shadow-sm sm:p-9">
-          <p className="text-sm font-bold text-emerald-700">Bản thử Tiểu học</p>
-          <p className="mt-2 text-4xl font-black">10 unit</p>
+          <p className="text-sm font-bold text-emerald-700">Lộ trình Mầm non</p>
+          <p className="mt-2 text-4xl font-black">20 unit</p>
           <div className="mt-7 space-y-4 text-sm">
-            {["30 lesson ngắn, rõ mục tiêu", "80 hoạt động tương tác", "Ôn tập cách quãng 1–3–7–14 ngày", "Không lưu bản ghi âm của trẻ"].map((item) => <p key={item} className="flex gap-3"><span className="text-emerald-600">✓</span>{item}</p>)}
+            {["60 lesson Letters, Numbers, Words", "216 hoạt động và trò chơi", "Mẫu câu nghe–nói theo từng chủ đề", "Ôn tập cách quãng 1–3–7–14 ngày"].map((item) => <p key={item} className="flex gap-3"><span className="text-emerald-600">✓</span>{item}</p>)}
           </div>
         </aside>
       </section>
