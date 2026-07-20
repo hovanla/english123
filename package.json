@@ -9,13 +9,13 @@
     "postcss": "8.5.19"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3001",
     "local:setup": "prisma db push --schema prisma/schema.local.prisma --force-reset --skip-generate && npm run db:seed",
     "postinstall": "prisma generate && prisma generate --schema prisma/schema.local.prisma",
     "prebuild": "prisma generate",
     "build": "next build",
     "prestart": "prisma generate",
-    "start": "next start",
+    "start": "next start --port 3001",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
