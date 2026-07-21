@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const token = randomBytes(32).toString("hex"); const tokenHash = createHash("sha256").update(token).digest("hex");
     await prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } });
     await prisma.passwordResetToken.create({ data: { userId: user.id, tokenHash, expiresAt: new Date(Date.now() + 30 * 60 * 1000) } });
-    const origin = process.env.NEXTAUTH_URL || new URL(request.url).origin; const resetUrl = `${origin}/reset-password?token=${token}`;
+    const origin = process.env.AUTH_URL || process.env.NEXTAUTH_URL || new URL(request.url).origin; const resetUrl = `${origin}/reset-password?token=${token}`;
     if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) {
       await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: process.env.EMAIL_FROM, to: user.email, subject: "Đặt lại mật khẩu English123", html: `<p>Liên kết này có hiệu lực trong 30 phút:</p><p><a href="${resetUrl}">Đặt lại mật khẩu</a></p>` }) });
     } else if (process.env.NODE_ENV !== "production") developmentResetUrl = resetUrl;

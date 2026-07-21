@@ -22,7 +22,8 @@ Môi trường phát triển không yêu cầu cài PostgreSQL. Tạo `.env` v�
 ```env
 DATABASE_URL="file:./dev.db"
 AUTH_SECRET="english123-local-development-secret-change-in-production"
-NEXTAUTH_URL="http://localhost:3000"
+AUTH_URL="http://localhost:3001"
+NEXTAUTH_URL="http://localhost:3001"
 ```
 
 Khởi tạo database local lần đầu rồi chạy ứng dụng:
@@ -42,7 +43,8 @@ Yêu cầu Node.js 20+ và PostgreSQL. Sao chép `.env.example` thành `.env`, s
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/english123"
 AUTH_SECRET="a-long-random-secret"
-NEXTAUTH_URL="http://localhost:3000"
+AUTH_URL="http://localhost:3001"
+NEXTAUTH_URL="http://localhost:3001"
 BOOTSTRAP_ADMIN_EMAIL="admin@example.com"
 BOOTSTRAP_ADMIN_PASSWORD="a-strong-password"
 ```
@@ -72,7 +74,7 @@ Script giữ nguyên ID Grade, Unit và các nội dung cũ, chuyển chúng th�
 ## Production trên Vercel
 
 1. Tạo PostgreSQL được quản lý và kết nối `DATABASE_URL` vào Vercel.
-2. Khai báo `AUTH_SECRET`, `NEXTAUTH_URL`, `BLOB_READ_WRITE_TOKEN`, `RESEND_API_KEY` và `EMAIL_FROM`.
+2. Khai báo `AUTH_SECRET`, `AUTH_URL`, `NEXTAUTH_URL`, `BLOB_READ_WRITE_TOKEN`, `RESEND_API_KEY` và `EMAIL_FROM`.
 3. Chạy `npm run db:deploy`, sau đó `npm run db:seed` một lần với thông tin bootstrap admin.
 4. Sau lần seed đầu, xóa `BOOTSTRAP_ADMIN_PASSWORD` khỏi biến môi trường.
 5. Bật backup tự động cho PostgreSQL và dùng môi trường Preview làm staging.
