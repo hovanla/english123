@@ -200,13 +200,7 @@ const scenes: Record<string, Scene> = {
   },
 };
 
-const phraseDistractors = ["Good morning!", "I am sleepy.", "It's a book.", "Thank you!", "Goodbye!", "I like bananas."];
-const meaningDistractors = ["Chào buổi sáng!", "Mình đang buồn ngủ.", "Đó là một quyển sách.", "Cảm ơn bạn!", "Tạm biệt!", "Mình thích chuối."];
 const numberWords = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-
-function alternatives(pool: string[], correct: string) {
-  return pool.filter((item) => item !== correct).slice(0, 2);
-}
 
 export function preschoolImageUrl(slug: string) {
   return `/preschool/scenes/${slug}.webp`;
@@ -218,51 +212,45 @@ export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLesson
   const imageUrl = preschoolImageUrl(unit.slug);
 
   const reflexActivities = scene.situations.flatMap((situation, index): ActivitySeed[] => {
-    const wrongPhrases = alternatives(phraseDistractors, situation.target);
-    const wrongMeanings = alternatives(meaningDistractors, situation.replyTranslation);
     const number = index + 1;
     return [
       {
-        type: ActivityType.MULTIPLE_CHOICE,
-        title: `Tình huống ${number}: Em sẽ nói gì?`,
-        instruction: "Quan sát tình huống, tự nghĩ câu trả lời rồi mới chọn đáp án.",
-        order: index * 3 + 1,
+        type: ActivityType.FLASHCARD,
+        title: `Tình huống ${number}: Nghe và đoán câu`,
+        instruction: "Nhìn tình huống, bấm nghe và tự đoán câu tiếng Anh. Không có đáp án gợi ý.",
+        order: index * 2 + 1,
         payload: {
+          mode: "AUDIO_GUESS",
           prompt: situation.cue,
           scenario: situation.cue,
           imageUrl,
           imageAlt: scene.imageAlt,
-          options: [situation.target, ...wrongPhrases].map((text, optionIndex) => ({ id: optionIndex === 0 ? "correct" : `wrong-${optionIndex}`, text })),
-          correctOptionId: "correct",
-          explanation: `${situation.target} — ${situation.translation}`,
-          modelAnswer: `Người kia có thể đáp: ${situation.reply} — ${situation.replyTranslation}`,
+          audioText: situation.target,
+          front: situation.target,
+          back: situation.translation,
+          example: `Người kia có thể đáp: ${situation.reply} — ${situation.replyTranslation}`,
         },
       },
       {
-        type: ActivityType.SPEAK_REPEAT,
-        title: `Bật phản xạ: ${situation.target}`,
-        instruction: "Nghe một lần, nhìn tình huống và nói lại như đang trò chuyện thật.",
-        order: index * 3 + 2,
-        payload: { prompt: situation.cue, scenario: situation.cue, target: situation.target, translation: situation.translation, imageUrl, imageAlt: scene.imageAlt },
-      },
-      {
-        type: ActivityType.LISTEN_CHOOSE,
-        title: "Nghe người kia trả lời",
-        instruction: "Không nhìn câu tiếng Anh. Bấm nghe và chọn đúng điều em hiểu.",
-        order: index * 3 + 3,
+        type: ActivityType.FLASHCARD,
+        title: "Nghe và đoán câu trả lời",
+        instruction: "Bấm nghe, tự đoán người kia vừa trả lời gì rồi mới xem đáp án.",
+        order: index * 2 + 2,
         payload: {
+          mode: "AUDIO_GUESS",
           prompt: "Người kia vừa trả lời điều gì?",
-          text: situation.reply,
-          options: [situation.replyTranslation, ...wrongMeanings].map((text, optionIndex) => ({ id: optionIndex === 0 ? "correct" : `wrong-${optionIndex}`, text })),
-          correctOptionId: "correct",
-          explanation: `${situation.reply} — ${situation.replyTranslation}`,
+          scenario: situation.cue,
+          imageUrl,
+          imageAlt: scene.imageAlt,
+          audioText: situation.reply,
+          front: situation.reply,
+          back: situation.replyTranslation,
         },
       },
     ];
   });
 
   const wordActivities = unit.words.flatMap(([word, meaning], index): ActivitySeed[] => {
-    const otherMeanings = unit.words.filter((_, otherIndex) => otherIndex !== index).map(([, itemMeaning]) => itemMeaning).slice(0, 2);
     return [
       {
         type: ActivityType.FLASHCARD,
@@ -281,17 +269,17 @@ export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLesson
         },
       },
       {
-        type: ActivityType.LISTEN_CHOOSE,
+        type: ActivityType.FLASHCARD,
         title: "Chỉ nghe và đoán nghĩa",
-        instruction: "Không nhìn từ. Bấm nghe, đoán từ em vừa nghe rồi chọn nghĩa đúng.",
+        instruction: "Không nhìn từ. Bấm nghe, tự đoán từ và nghĩa rồi mới xem đáp án.",
         order: index * 2 + 2,
         payload: {
+          mode: "AUDIO_GUESS",
           prompt: "Em nghe thấy từ nào?",
-          text: word,
+          audioText: word,
           visual: "🎧",
-          options: [meaning, ...otherMeanings].map((text, optionIndex) => ({ id: optionIndex === 0 ? "correct" : `wrong-${optionIndex}`, text })),
-          correctOptionId: "correct",
-          explanation: `${word} — ${meaning}`,
+          front: word,
+          back: meaning,
         },
       },
     ];
@@ -330,8 +318,8 @@ export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLesson
   ];
 
   return [
-    { slug: "phan-xa-doi-thuc", title: "Phản xạ đời thực", description: "Gặp tình huống, tự nghĩ câu cần nói, nghe đáp lại và luyện nói.", activities: reflexActivities },
-    { slug: "nhin-nghe-doan-tu", title: "Nhìn và nghe đoán từ", description: "Nhìn tranh đoán từ, sau đó chỉ nghe âm thanh để chọn nghĩa.", activities: wordActivities },
+    { slug: "phan-xa-doi-thuc", title: "Phản xạ đời thực", description: "Nhìn tình huống, nghe câu và tự đoán trước khi xem đáp án.", activities: reflexActivities },
+    { slug: "nhin-nghe-doan-tu", title: "Nhìn và nghe đoán từ", description: "Nhìn tranh hoặc chỉ nghe âm thanh, tự nhớ từ rồi mới xem đáp án.", activities: wordActivities },
     { slug: "chu-cai-chu-so", title: "Chữ cái & Chữ số", description: "Nhìn, nghe và nhận biết chữ cái, chữ số trong unit.", activities: letterActivities },
   ];
 }

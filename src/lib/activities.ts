@@ -11,7 +11,8 @@ const basePrompt = {
   imageUrl: z.string().min(1).optional(),
   imageAlt: z.string().optional(),
   audioUrl: z.string().min(1).optional(),
-  mode: z.enum(["VISUAL_GUESS", "STANDARD"]).optional(),
+  audioText: z.string().min(1).optional(),
+  mode: z.enum(["VISUAL_GUESS", "AUDIO_GUESS", "STANDARD"]).optional(),
 };
 
 export const activityPayloadSchemas = {

@@ -32,11 +32,12 @@ async function main() {
   let activityCount = 0;
   for (const unit of course.units) {
     const existingWordLesson = unit.lessons.find((lesson) => ["words", "nhin-nghe-doan-tu"].includes(lesson.slug));
-    const visualCards = existingWordLesson?.activities
+    const flashcardPayloads = existingWordLesson?.activities
       .filter((activity) => activity.type === "FLASHCARD")
       .map((activity) => payloadObject(activity.payload))
-      .filter((payload) => typeof payload.front === "string" && typeof payload.back === "string")
-      .slice(0, 4) || [];
+      .filter((payload) => typeof payload.front === "string" && typeof payload.back === "string") || [];
+    const visualOnly = flashcardPayloads.filter((payload) => payload.mode === "VISUAL_GUESS");
+    const visualCards = (visualOnly.length >= 4 ? visualOnly : flashcardPayloads).slice(0, 4);
     if (visualCards.length !== 4) throw new Error(`Không đọc được 4 từ vựng của unit ${unit.slug}`);
 
     const words = visualCards.map((payload) => [String(payload.front), String(payload.back)] as [string, string]);

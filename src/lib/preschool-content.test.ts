@@ -8,7 +8,7 @@ const slugs = [
 ];
 
 describe("preschool reflex curriculum", () => {
-  it("defines valid image, listening and real-life activities for all 20 units", () => {
+  it("defines valid no-hint listening and real-life activities for all 20 units", () => {
     for (const [index, slug] of slugs.entries()) {
       expect(getPreschoolScene(slug), `scene ${slug}`).toBeTruthy();
       const lessons = buildPreschoolLessons({
@@ -20,6 +20,10 @@ describe("preschool reflex curriculum", () => {
       });
       expect(lessons.map((lesson) => lesson.slug)).toEqual(["phan-xa-doi-thuc", "nhin-nghe-doan-tu", "chu-cai-chu-so"]);
       expect(lessons.flatMap((lesson) => lesson.activities).every((activity) => validateActivityPayload(activity.type, activity.payload).success)).toBe(true);
+      expect(lessons[0].activities).toHaveLength(4);
+      expect(lessons[0].activities.every((activity) => activity.type === "FLASHCARD" && activity.payload.mode === "AUDIO_GUESS" && !("options" in activity.payload))).toBe(true);
+      expect(lessons[1].activities.filter((activity) => activity.payload.mode === "AUDIO_GUESS").every((activity) => !("options" in activity.payload))).toBe(true);
+      expect(lessons.slice(0, 2).flatMap((lesson) => lesson.activities).some((activity) => activity.type === "SPEAK_REPEAT" || activity.type === "LISTEN_CHOOSE")).toBe(false);
     }
   });
 });

@@ -34,6 +34,8 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
   const pairs = (payload.pairs || []) as Array<{ left: string; right: string }>;
   const imageUrl = typeof payload.imageUrl === "string" ? payload.imageUrl : "";
   const isVisualGuess = activity.type === "FLASHCARD" && payload.mode === "VISUAL_GUESS";
+  const isAudioGuess = activity.type === "FLASHCARD" && payload.mode === "AUDIO_GUESS";
+  const isHiddenGuess = isVisualGuess || isAudioGuess;
   const progress = ((index + (result?.passed ? 1 : 0)) / activities.length) * 100;
 
   function resetActivity(nextIndex: number) {
@@ -43,12 +45,12 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
     setRevealed(false);
   }
 
-  async function submit() {
+  async function submit(submittedAnswer = answer) {
     setPending(true);
     const response = await fetch("/api/attempts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ activityId: activity.id, answer, durationSeconds: 0 }),
+      body: JSON.stringify({ activityId: activity.id, answer: submittedAnswer, durationSeconds: 0 }),
     });
     const data = await response.json();
     setPending(false);
@@ -107,16 +109,26 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
         {(activity.type === "LISTEN_CHOOSE" || activity.type === "LISTEN_TYPE") && <div className="mt-6 text-center"><button type="button" onClick={() => speak(String(payload.text || ""))} className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-sky-100 px-6 py-3 font-black text-sky-900 hover:bg-sky-200"><span className="text-2xl">🔊</span> Nghe lại</button><p className="mt-2 text-xs font-bold text-slate-500">Từ tiếng Anh được giấu để em luyện nghe thật</p></div>}
 
         {activity.type === "FLASHCARD" && <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-center">
-          {isVisualGuess && !revealed ? <>
-            <div className="text-6xl" aria-hidden="true">{String(payload.visual || "✨")}</div>
-            <p className="mt-4 font-bold text-amber-950">Nói đáp án trong đầu trước nhé.</p>
+          {isHiddenGuess && !revealed ? <>
+            {isAudioGuess ? <>
+              <div className="text-6xl" aria-hidden="true">🎧</div>
+              <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="mt-5 inline-flex min-h-14 items-center gap-3 rounded-2xl bg-sky-100 px-6 py-3 font-black text-sky-900 hover:bg-sky-200"><span className="text-2xl">🔊</span> Nghe câu</button>
+              <p className="mt-4 font-bold text-amber-950">Nghe kỹ và tự đoán trong đầu. Câu tiếng Anh vẫn đang được giấu.</p>
+            </> : <>
+              <div className="text-6xl" aria-hidden="true">{String(payload.visual || "✨")}</div>
+              <p className="mt-4 font-bold text-amber-950">Đoán đáp án trong đầu trước nhé.</p>
+            </>}
             <button type="button" onClick={() => setRevealed(true)} className="mt-5 rounded-2xl bg-amber-500 px-6 py-3 font-black text-amber-950 hover:bg-amber-400">Xem đáp án</button>
           </> : <>
-            {payload.visual && <div className="text-5xl" aria-hidden="true">{String(payload.visual)}</div>}
+            {Boolean(payload.visual) && <div className="text-5xl" aria-hidden="true">{String(payload.visual)}</div>}
             <p className="mt-3 text-4xl font-black text-slate-950">{String(payload.front)}</p>
             <p className="mt-2 text-xl font-bold text-amber-900">{String(payload.back)}</p>
-            {payload.example && <p className="mt-3 text-sm text-slate-600">{String(payload.example)}</p>}
-            <div className="mt-5 flex flex-wrap justify-center gap-3"><button type="button" onClick={() => speak(String(payload.front || ""))} className="rounded-2xl bg-sky-100 px-5 py-3 font-black text-sky-900">🔊 Nghe từ</button><button type="button" onClick={() => setAnswer({ known: true })} className="rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white">Em đã nói lại</button></div>
+            {Boolean(payload.example) && <p className="mt-3 text-sm text-slate-600">{String(payload.example)}</p>}
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="rounded-2xl bg-sky-100 px-5 py-3 font-black text-sky-900">🔊 Nghe lại</button>
+              <button type="button" disabled={pending} onClick={() => void submit({ known: true })} className="rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white disabled:opacity-50">Em đoán đúng</button>
+              <button type="button" disabled={pending} onClick={() => void submit({ known: false })} className="rounded-2xl border border-amber-400 bg-white px-5 py-3 font-black text-amber-900 disabled:opacity-50">Em chưa nhớ</button>
+            </div>
           </>}
         </div>}
 
@@ -152,8 +164,8 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
           {Boolean(payload.modelAnswer) && <p className="mt-2 text-sm leading-6">{String(payload.modelAnswer)}</p>}
           {result.passed && index < activities.length - 1 && <button type="button" onClick={() => resetActivity(index + 1)} className="mt-4 rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white">Phản xạ tiếp theo →</button>}
           {result.passed && index === activities.length - 1 && <a href="/dashboard" className="mt-4 inline-block rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white">Hoàn thành unit</a>}
-          {!result.passed && <button type="button" onClick={() => { setResult(null); setAnswer({}); }} className="mt-4 rounded-2xl bg-amber-500 px-5 py-3 font-black">Thử lại</button>}
-        </div> : <button type="button" disabled={pending || Object.keys(answer).length === 0} onClick={submit} className="mt-6 min-h-13 rounded-2xl bg-emerald-700 px-7 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{pending ? "Đang kiểm tra…" : "Kiểm tra phản xạ"}</button>}
+          {!result.passed && <button type="button" onClick={() => { setResult(null); setAnswer({}); setRevealed(false); }} className="mt-4 rounded-2xl bg-amber-500 px-5 py-3 font-black">Nghe và đoán lại</button>}
+        </div> : activity.type !== "FLASHCARD" && <button type="button" disabled={pending || Object.keys(answer).length === 0} onClick={() => void submit()} className="mt-6 min-h-13 rounded-2xl bg-emerald-700 px-7 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{pending ? "Đang kiểm tra…" : "Kiểm tra phản xạ"}</button>}
       </div>
     </article>
   </section>;
