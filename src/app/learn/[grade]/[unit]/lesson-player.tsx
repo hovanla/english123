@@ -72,67 +72,67 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
     recognition.start();
   }
 
-  return <section className="mt-7 grid gap-5 lg:grid-cols-[260px_1fr]">
-    <aside className="h-fit rounded-3xl bg-white p-4 shadow-sm lg:sticky lg:top-4">
+  return <section className="mt-4 grid gap-4 lg:grid-cols-[220px_1fr]">
+    <aside className="h-fit rounded-2xl bg-white p-3 shadow-sm lg:sticky lg:top-3">
       <p className="px-2 text-xs font-black uppercase tracking-wider text-emerald-700">Tiến độ unit</p>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><span className="block h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${progress}%` }}/></div>
-      <p className="mt-2 px-2 text-xs font-bold text-slate-500">{index + 1}/{activities.length} phản xạ</p>
-      <div className="mt-5 space-y-2">{lessons.map((lesson, lessonIndex) => {
+      <p className="mt-1.5 px-2 text-xs font-bold text-slate-500">{index + 1}/{activities.length} phản xạ</p>
+      <div className="mt-3 space-y-1.5">{lessons.map((lesson, lessonIndex) => {
         const active = activity.lessonIndex === lessonIndex;
-        return <button type="button" key={lesson.id} onClick={() => resetActivity(lessonStarts[lessonIndex])} className={`w-full rounded-2xl p-3 text-left transition ${active ? "bg-emerald-800 text-white" : "bg-slate-50 hover:bg-emerald-50"}`}>
-          <p className="text-sm font-black">{lessonIndex + 1}. {lesson.title}</p>
+        return <button type="button" key={lesson.id} onClick={() => resetActivity(lessonStarts[lessonIndex])} className={`w-full rounded-xl p-2.5 text-left transition ${active ? "bg-emerald-800 text-white" : "bg-slate-50 hover:bg-emerald-50"}`}>
+          <p className="text-[13px] font-black">{lessonIndex + 1}. {lesson.title}</p>
           <p className={`mt-1 text-xs ${active ? "text-emerald-100" : "text-slate-500"}`}>{lesson.activities.length} hoạt động · {lesson.estimatedMinutes} phút</p>
         </button>;
       })}</div>
     </aside>
 
-    <article className="overflow-hidden rounded-3xl bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-6 sm:p-8">
+    <article className="overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div className="border-b border-slate-100 p-4 sm:p-5">
         <p className="text-xs font-black uppercase tracking-wider text-emerald-700">{activity.lessonTitle} · {index + 1}/{activities.length}</p>
-        <h2 className="mt-3 text-3xl font-black">{activity.title}</h2>
-        <p className="mt-2 leading-7 text-slate-600">{activity.instruction}</p>
+        <h2 className="mt-2 text-2xl font-black">{activity.title}</h2>
+        <p className="mt-1 text-sm leading-6 text-slate-600">{activity.instruction}</p>
       </div>
 
-      <div className="p-6 sm:p-8">
-        {imageUrl && <div className="grid gap-5 md:grid-cols-[280px_1fr] md:items-center">
-          <div className="relative mx-auto aspect-[5/6] w-full max-w-[320px] overflow-hidden rounded-3xl bg-amber-50"><Image src={imageUrl} alt={String(payload.imageAlt || "Hình minh họa tình huống")} fill sizes="(max-width: 768px) 90vw, 280px" className="object-cover" priority={index === 0}/></div>
+      <div className="p-4 sm:p-5">
+        {imageUrl && <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-center">
+          <div className="relative mx-auto aspect-[5/6] w-full max-w-[240px] overflow-hidden rounded-2xl bg-amber-50"><Image src={imageUrl} alt={String(payload.imageAlt || "Hình minh họa tình huống")} fill sizes="(max-width: 768px) 80vw, 220px" className="object-cover" priority={index === 0}/></div>
           <div>
-            {Boolean(payload.scenario) && <p className="rounded-3xl bg-amber-50 p-5 text-lg font-bold leading-8 text-amber-950"><span className="mb-2 block text-xs font-black uppercase tracking-wider text-amber-700">Tình huống đời thật</span>{String(payload.scenario)}</p>}
-            {!payload.scenario && <p className="rounded-3xl bg-sky-50 p-5 text-lg font-bold leading-8 text-sky-950"><span className="mb-2 block text-xs font-black uppercase tracking-wider text-sky-700">Nhìn tranh và suy nghĩ</span>{String(payload.prompt)}</p>}
+            {Boolean(payload.scenario) && <p className="rounded-2xl bg-amber-50 p-4 text-base font-bold leading-6 text-amber-950"><span className="mb-1.5 block text-[11px] font-black uppercase tracking-wider text-amber-700">Tình huống đời thật</span>{String(payload.scenario)}</p>}
+            {!payload.scenario && <p className="rounded-2xl bg-sky-50 p-4 text-base font-bold leading-6 text-sky-950"><span className="mb-1.5 block text-[11px] font-black uppercase tracking-wider text-sky-700">Nhìn tranh và suy nghĩ</span>{String(payload.prompt)}</p>}
           </div>
         </div>}
 
-        {!imageUrl && Boolean(payload.scenario) && <p className="rounded-3xl bg-amber-50 p-5 text-lg font-bold leading-8 text-amber-950"><span className="mb-2 block text-xs font-black uppercase tracking-wider text-amber-700">Tình huống đời thật</span>{String(payload.scenario)}</p>}
-        {!imageUrl && Boolean(payload.visual) && <div className="mt-2 text-center text-7xl" aria-hidden="true">{String(payload.visual)}</div>}
-        {!payload.scenario && !imageUrl && <p className="mt-5 text-center text-xl font-black leading-8">{String(payload.prompt)}</p>}
+        {!imageUrl && Boolean(payload.scenario) && <p className="rounded-2xl bg-amber-50 p-4 text-base font-bold leading-6 text-amber-950"><span className="mb-1.5 block text-[11px] font-black uppercase tracking-wider text-amber-700">Tình huống đời thật</span>{String(payload.scenario)}</p>}
+        {!imageUrl && Boolean(payload.visual) && <div className="mt-2 text-center text-6xl" aria-hidden="true">{String(payload.visual)}</div>}
+        {!payload.scenario && !imageUrl && <p className="mt-3 text-center text-lg font-black leading-7">{String(payload.prompt)}</p>}
 
         {(activity.type === "LISTEN_CHOOSE" || activity.type === "LISTEN_TYPE") && <div className="mt-6 text-center"><button type="button" onClick={() => speak(String(payload.text || ""))} className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-sky-100 px-6 py-3 font-black text-sky-900 hover:bg-sky-200"><span className="text-2xl">🔊</span> Nghe lại</button><p className="mt-2 text-xs font-bold text-slate-500">Từ tiếng Anh được giấu để em luyện nghe thật</p></div>}
 
-        {activity.type === "FLASHCARD" && <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-center">
+        {activity.type === "FLASHCARD" && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
           {isHiddenGuess && !revealed ? <>
             {isAudioGuess ? <>
-              <div className="text-6xl" aria-hidden="true">🎧</div>
-              <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="mt-5 inline-flex min-h-14 items-center gap-3 rounded-2xl bg-sky-100 px-6 py-3 font-black text-sky-900 hover:bg-sky-200"><span className="text-2xl">🔊</span> Nghe câu</button>
-              <p className="mt-4 font-bold text-amber-950">Nghe kỹ và tự đoán trong đầu. Câu tiếng Anh vẫn đang được giấu.</p>
+              <div className="text-5xl" aria-hidden="true">🎧</div>
+              <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="mt-3 inline-flex min-h-12 items-center gap-2 rounded-xl bg-sky-100 px-5 py-2.5 font-black text-sky-900 hover:bg-sky-200"><span className="text-xl">🔊</span> Nghe câu</button>
+              <p className="mt-3 text-sm font-bold text-amber-950">Nghe kỹ và tự đoán trong đầu. Câu tiếng Anh vẫn đang được giấu.</p>
             </> : <>
-              <div className="text-6xl" aria-hidden="true">{String(payload.visual || "✨")}</div>
-              <p className="mt-4 font-bold text-amber-950">Đoán đáp án trong đầu trước nhé.</p>
+              <div className="text-5xl" aria-hidden="true">{String(payload.visual || "✨")}</div>
+              <p className="mt-3 text-sm font-bold text-amber-950">Đoán đáp án trong đầu trước nhé.</p>
             </>}
-            <button type="button" onClick={() => setRevealed(true)} className="mt-5 rounded-2xl bg-amber-500 px-6 py-3 font-black text-amber-950 hover:bg-amber-400">Xem đáp án</button>
+            <button type="button" onClick={() => setRevealed(true)} className="mt-3 rounded-xl bg-amber-500 px-5 py-2.5 font-black text-amber-950 hover:bg-amber-400">Xem đáp án</button>
           </> : <>
             {Boolean(payload.visual) && <div className="text-5xl" aria-hidden="true">{String(payload.visual)}</div>}
-            <p className="mt-3 text-4xl font-black text-slate-950">{String(payload.front)}</p>
-            <p className="mt-2 text-xl font-bold text-amber-900">{String(payload.back)}</p>
-            {Boolean(payload.example) && <p className="mt-3 text-sm text-slate-600">{String(payload.example)}</p>}
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
-              <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="rounded-2xl bg-sky-100 px-5 py-3 font-black text-sky-900">🔊 Nghe lại</button>
-              <button type="button" disabled={pending} onClick={() => void submit({ known: true })} className="rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white disabled:opacity-50">Em đoán đúng</button>
-              <button type="button" disabled={pending} onClick={() => void submit({ known: false })} className="rounded-2xl border border-amber-400 bg-white px-5 py-3 font-black text-amber-900 disabled:opacity-50">Em chưa nhớ</button>
+            <p className="mt-2 text-3xl font-black text-slate-950">{String(payload.front)}</p>
+            <p className="mt-1 text-lg font-bold text-amber-900">{String(payload.back)}</p>
+            {Boolean(payload.example) && <p className="mt-2 text-sm text-slate-600">{String(payload.example)}</p>}
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="min-h-11 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900">🔊 Nghe lại</button>
+              <button type="button" disabled={pending} onClick={() => void submit({ known: true })} className="min-h-11 rounded-xl bg-emerald-700 px-4 py-2 font-black text-white disabled:opacity-50">Em đoán đúng</button>
+              <button type="button" disabled={pending} onClick={() => void submit({ known: false })} className="min-h-11 rounded-xl border border-amber-400 bg-white px-4 py-2 font-black text-amber-900 disabled:opacity-50">Em chưa nhớ</button>
             </div>
           </>}
         </div>}
 
-        {(activity.type === "MULTIPLE_CHOICE" || activity.type === "LISTEN_CHOOSE") && <div className="mt-6 grid gap-3">{options.map((option, optionIndex) => <button type="button" onClick={() => setAnswer({ optionId: option.id })} key={option.id} className={`min-h-14 rounded-2xl border p-4 text-left font-bold transition ${answer.optionId === option.id ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`}><span className="mr-3 inline-grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-xs">{String.fromCharCode(65 + optionIndex)}</span>{option.text}</button>)}</div>}
+        {(activity.type === "MULTIPLE_CHOICE" || activity.type === "LISTEN_CHOOSE") && <div className="mt-4 grid gap-2">{options.map((option, optionIndex) => <button type="button" onClick={() => setAnswer({ optionId: option.id })} key={option.id} className={`min-h-12 rounded-xl border p-3 text-left text-sm font-bold transition ${answer.optionId === option.id ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`}><span className="mr-2 inline-grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-[11px]">{String.fromCharCode(65 + optionIndex)}</span>{option.text}</button>)}</div>}
 
         {activity.type === "MATCHING" && <div className="mt-5 space-y-3">{pairs.map((pair) => <label key={pair.left} className="grid items-center gap-3 rounded-2xl bg-slate-50 p-3 sm:grid-cols-2"><strong>{pair.left}</strong><select className="rounded-xl border bg-white p-2" onChange={(event) => { const current = (answer.pairs || []) as Array<{ left: string; right: string }>; setAnswer({ pairs: [...current.filter((item) => item.left !== pair.left), { left: pair.left, right: event.target.value }] }); }}><option value="">Chọn nghĩa</option>{pairs.map((item) => <option key={item.right}>{item.right}</option>)}</select></label>)}</div>}
 
@@ -158,14 +158,14 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
           onChange={(event) => setAnswer({ text: event.target.value })}
         />}
 
-        {result ? <div aria-live="polite" className={`mt-6 rounded-3xl p-5 ${result.passed ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-950"}`}>
-          <p className="text-xl font-black">{result.passed ? `Chính xác! ${result.score} điểm` : `Chưa đúng rồi. Mình xem đáp án và thử lại nhé.`}</p>
+        {result ? <div aria-live="polite" className={`mt-4 rounded-2xl p-4 ${result.passed ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-950"}`}>
+          <p className="text-lg font-black">{result.passed ? `Chính xác! ${result.score} điểm` : `Chưa đúng rồi. Mình xem đáp án và thử lại nhé.`}</p>
           {Boolean(payload.explanation) && <p className="mt-3 font-bold">Đáp án: {String(payload.explanation)}</p>}
           {Boolean(payload.modelAnswer) && <p className="mt-2 text-sm leading-6">{String(payload.modelAnswer)}</p>}
-          {result.passed && index < activities.length - 1 && <button type="button" onClick={() => resetActivity(index + 1)} className="mt-4 rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white">Phản xạ tiếp theo →</button>}
-          {result.passed && index === activities.length - 1 && <a href="/dashboard" className="mt-4 inline-block rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white">Hoàn thành unit</a>}
-          {!result.passed && <button type="button" onClick={() => { setResult(null); setAnswer({}); setRevealed(false); }} className="mt-4 rounded-2xl bg-amber-500 px-5 py-3 font-black">Nghe và đoán lại</button>}
-        </div> : activity.type !== "FLASHCARD" && <button type="button" disabled={pending || Object.keys(answer).length === 0} onClick={() => void submit()} className="mt-6 min-h-13 rounded-2xl bg-emerald-700 px-7 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{pending ? "Đang kiểm tra…" : "Kiểm tra phản xạ"}</button>}
+          {result.passed && index < activities.length - 1 && <button type="button" onClick={() => resetActivity(index + 1)} className="mt-3 rounded-xl bg-emerald-700 px-4 py-2.5 font-black text-white">Phản xạ tiếp theo →</button>}
+          {result.passed && index === activities.length - 1 && <a href="/dashboard" className="mt-3 inline-block rounded-xl bg-emerald-700 px-4 py-2.5 font-black text-white">Hoàn thành unit</a>}
+          {!result.passed && <button type="button" onClick={() => { setResult(null); setAnswer({}); setRevealed(false); }} className="mt-3 rounded-xl bg-amber-500 px-4 py-2.5 font-black">Nghe và đoán lại</button>}
+        </div> : activity.type !== "FLASHCARD" && <button type="button" disabled={pending || Object.keys(answer).length === 0} onClick={() => void submit()} className="mt-4 min-h-12 rounded-xl bg-emerald-700 px-5 py-2.5 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{pending ? "Đang kiểm tra…" : "Kiểm tra phản xạ"}</button>}
       </div>
     </article>
   </section>;
