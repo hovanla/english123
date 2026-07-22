@@ -20,6 +20,13 @@ type Scene = {
   situations: Situation[];
 };
 
+type AlignedCurriculum = {
+  words: Array<[string, string]>;
+  visualIndexes?: number[];
+  vocabularyAsset?: string;
+  sentences: Array<[string, string]>;
+};
+
 type ActivitySeed = {
   type: ActivityType;
   title: string;
@@ -219,60 +226,115 @@ const scenes: Record<string, Scene> = {
   },
 };
 
+const alignedCurriculum: Record<string, AlignedCurriculum> = {
+  hello: {
+    words: [],
+    sentences: [["Hello.", "Xin chào."], ["What's your name?", "Tên bạn là gì?"], ["I'm Lisa.", "Mình là Lisa."], ["Goodbye.", "Tạm biệt."]],
+  },
+  family: {
+    words: [["mum", "mẹ"], ["dad", "bố"], ["grandma", "bà"], ["grandpa", "ông"]], vocabularyAsset: "family-aligned",
+    sentences: [["Who's this?", "Đây là ai?"], ["It's my mum.", "Đây là mẹ mình."], ["It's my dad.", "Đây là bố mình."], ["It's my grandma.", "Đây là bà mình."], ["It's my grandpa.", "Đây là ông mình."]],
+  },
+  school: { words: [["bag", "chiếc cặp"], ["book", "quyển sách"], ["pencil", "bút chì"], ["crayon", "bút màu"]], visualIndexes: [4, 0, 1, 2], sentences: [] },
+  feelings: {
+    words: [["happy", "vui vẻ"], ["sleepy", "buồn ngủ"], ["hungry", "đói"], ["thirsty", "khát"]], vocabularyAsset: "feelings-aligned",
+    sentences: [["Are you happy?", "Bạn có vui không?"], ["Yes, I am.", "Có, mình vui."], ["Are you hungry?", "Bạn có đói không?"], ["No, I'm not.", "Không, mình không đói."]],
+  },
+  toys: {
+    words: [["ball", "quả bóng"], ["car", "ô tô"], ["doll", "búp bê"], ["teddy", "gấu bông"]], visualIndexes: [0, 5, 1, 4],
+    sentences: [["What's this?", "Đây là cái gì?"], ["It's a ball.", "Đây là quả bóng."], ["It's a car.", "Đây là ô tô."], ["It's a doll.", "Đây là búp bê."], ["It's a teddy.", "Đây là gấu bông."]],
+  },
+  colors: {
+    words: [["red", "màu đỏ"], ["green", "màu xanh lá cây"], ["blue", "màu xanh dương"], ["yellow", "màu vàng"]], visualIndexes: [0, 3, 1, 2],
+    sentences: [["What color is it?", "Nó màu gì?"], ["It's blue.", "Nó màu xanh dương."], ["This is a red car.", "Đây là một chiếc ô tô màu đỏ."]],
+  },
+  body: { words: [["head", "đầu"], ["arms", "cánh tay"], ["hands", "bàn tay"], ["legs", "chân"]], visualIndexes: [0, 2, 1, 3], sentences: [] },
+  face: {
+    words: [["ears", "đôi tai"], ["eyes", "đôi mắt"], ["nose", "mũi"], ["mouth", "miệng"]], visualIndexes: [1, 0, 2, 3],
+    sentences: [["What's this?", "Đây là gì?"], ["It's my nose.", "Đây là mũi của mình."], ["What are these?", "Đây là những gì?"], ["They're my eyes.", "Chúng là mắt của mình."]],
+  },
+  shapes: {
+    words: [["circle", "hình tròn"], ["square", "hình vuông"], ["triangle", "hình tam giác"], ["rectangle", "hình chữ nhật"]], visualIndexes: [0, 1, 2, 4],
+    sentences: [["This is a circle.", "Đây là một hình tròn."], ["This is a triangle.", "Đây là một hình tam giác."], ["Is it a square?", "Đây có phải hình vuông không?"], ["Yes, it is.", "Đúng."], ["Is it a triangle?", "Đây có phải hình tam giác không?"], ["No, it isn't. It's a rectangle.", "Không phải. Đây là hình chữ nhật."]],
+  },
+  clothes: {
+    words: [["shirt", "áo sơ mi"], ["skirt", "chân váy"], ["pants", "quần dài"], ["shoes", "đôi giày"]], vocabularyAsset: "clothes-aligned",
+    sentences: [["This is my shirt.", "Đây là áo sơ mi của mình."], ["This is your skirt.", "Đây là chân váy của bạn."], ["These are my pants.", "Đây là quần dài của mình."], ["These are your shoes.", "Đây là đôi giày của bạn."]],
+  },
+  fruit: {
+    words: [["apple", "quả táo"], ["orange", "quả cam"], ["banana", "quả chuối"], ["lime", "quả chanh xanh"]], vocabularyAsset: "fruit-aligned",
+    sentences: [["I like apples.", "Mình thích táo."], ["I like oranges.", "Mình thích cam."], ["I don't like bananas.", "Mình không thích chuối."], ["I don't like limes.", "Mình không thích chanh xanh."]],
+  },
+  drinks: {
+    words: [["water", "nước"], ["milk", "sữa"], ["juice", "nước ép"], ["coke", "nước ngọt cola"]], vocabularyAsset: "drinks-aligned",
+    sentences: [["Do you like juice?", "Bạn có thích nước ép không?"], ["Yes, I do.", "Có, mình thích."], ["Do you like coke?", "Bạn có thích nước ngọt cola không?"], ["No, I don't.", "Không, mình không thích."]],
+  },
+  snacks: { words: [["cookie", "bánh quy"], ["cake", "bánh kem"], ["jelly", "thạch"], ["ice cream", "kem"]], vocabularyAsset: "snacks-aligned", sentences: [] },
+  "in-the-room": { words: [["bed", "chiếc giường"], ["table", "chiếc bàn"], ["chair", "chiếc ghế"], ["TV", "chiếc ti vi"]], vocabularyAsset: "in-the-room-aligned", sentences: [] },
+  "at-home": {
+    words: [["eat", "ăn"], ["play", "chơi"], ["paint", "vẽ tranh"], ["watch", "xem"]], vocabularyAsset: "at-home-aligned",
+    sentences: [["What are you doing?", "Bạn đang làm gì?"], ["I'm eating an apple.", "Mình đang ăn táo."], ["What are you doing?", "Bạn đang làm gì?"], ["I'm playing with my toys.", "Mình đang chơi đồ chơi."]],
+  },
+  "i-can": { words: [["dance", "nhảy múa"], ["sing", "hát"], ["draw", "vẽ"], ["read", "đọc"]], vocabularyAsset: "i-can-aligned", sentences: [] },
+  pets: { words: [["dog", "chó"], ["cat", "mèo"], ["fish", "cá"], ["bird", "chim"]], visualIndexes: [0, 1, 2, 3], sentences: [] },
+  "the-farm": {
+    words: [["duck", "con vịt"], ["chicken", "con gà"], ["pig", "con lợn"], ["cow", "con bò"]], visualIndexes: [1, 5, 2, 0],
+    sentences: [["Is it a duck?", "Đây có phải con vịt không?"], ["Is it a cow?", "Đây có phải con bò không?"], ["Yes, it is.", "Đúng rồi."], ["No, it isn't.", "Không phải."]],
+  },
+  "the-zoo": {
+    words: [["monkey", "khỉ"], ["tiger", "hổ"], ["zebra", "ngựa vằn"], ["bear", "gấu"]], vocabularyAsset: "the-zoo-aligned",
+    sentences: [["What's that?", "Kia là con gì?"], ["It's a tiger.", "Kia là con hổ."], ["What are those?", "Chúng là con gì?"], ["They're bears.", "Chúng là những con gấu."]],
+  },
+  "the-park": { words: [["playground", "sân chơi"], ["seesaw", "bập bênh"], ["slide", "cầu trượt"], ["swing", "xích đu"]], vocabularyAsset: "the-park-aligned", sentences: [] },
+};
+
+const helloSentenceCues: Record<string, string> = {
+  "Hello.": "Em vừa gặp một người mới. Câu đầu tiên em nói là gì?",
+  "What's your name?": "Em muốn biết tên của người bạn mới. Em hỏi thế nào?",
+  "I'm Lisa.": "Bạn vừa hỏi tên em. Em trả lời và giới thiệu mình là Lisa thế nào?",
+  "Goodbye.": "Đến lúc hai người tạm biệt nhau. Em nói gì?",
+};
+
 export function preschoolImageUrl(slug: string) {
   return `/preschool/scenes/${slug}.webp`;
 }
 
 export function preschoolVocabularyImageUrl(slug: string) {
-  return `/preschool/vocabulary/${slug}.webp`;
+  const asset = alignedCurriculum[slug]?.vocabularyAsset || slug;
+  return `/preschool/vocabulary/${asset}.webp`;
 }
 
 export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLessonSeed[] {
-  const scene = scenes[unit.slug];
-  if (!scene) throw new Error(`Missing preschool scene content for ${unit.slug}`);
+  const baseScene = scenes[unit.slug];
+  const curriculum = alignedCurriculum[unit.slug];
+  if (!baseScene || !curriculum) throw new Error(`Missing preschool scene content for ${unit.slug}`);
   const imageUrl = preschoolImageUrl(unit.slug);
   const vocabularyImageUrl = preschoolVocabularyImageUrl(unit.slug);
 
-  const reflexActivities = scene.situations.flatMap((situation, index): ActivitySeed[] => {
+  const reflexActivities = curriculum.sentences.map(([target, translation], index): ActivitySeed => {
     const number = index + 1;
-    return [
-      {
-        type: ActivityType.FLASHCARD,
-        title: `Tình huống ${number}: Nghe và đoán câu`,
-        instruction: "Nhìn tình huống, bấm nghe và tự đoán câu tiếng Anh. Không có đáp án gợi ý.",
-        order: index * 2 + 1,
-        payload: {
-          mode: "AUDIO_GUESS",
-          prompt: situation.cue,
-          scenario: situation.cue,
-          imageUrl,
-          imageAlt: scene.imageAlt,
-          audioText: situation.target,
-          front: situation.target,
-          back: situation.translation,
-          example: `Người kia có thể đáp: ${situation.reply} — ${situation.replyTranslation}`,
-        },
+    const cue = unit.slug === "hello" && helloSentenceCues[target]
+      ? helloSentenceCues[target]
+      : `Trong tình huống thật, em muốn nói “${translation}”. Câu tiếng Anh nào phù hợp?`;
+    return {
+      type: ActivityType.FLASHCARD,
+      title: `Mẫu câu ${number}: Nghe và đoán`,
+      instruction: "Nhìn tình huống, bấm nghe và tự đoán câu tiếng Anh trước khi mở đáp án.",
+      order: number,
+      payload: {
+        mode: "AUDIO_GUESS",
+        prompt: cue,
+        scenario: cue,
+        imageUrl,
+        imageAlt: baseScene.imageAlt,
+        audioText: target,
+        front: target,
+        back: translation,
       },
-      {
-        type: ActivityType.FLASHCARD,
-        title: "Nghe và đoán câu trả lời",
-        instruction: "Bấm nghe, tự đoán người kia vừa trả lời gì rồi mới xem đáp án.",
-        order: index * 2 + 2,
-        payload: {
-          mode: "AUDIO_GUESS",
-          prompt: "Người kia vừa trả lời điều gì?",
-          scenario: situation.cue,
-          imageUrl,
-          imageAlt: scene.imageAlt,
-          audioText: situation.reply,
-          front: situation.reply,
-          back: situation.replyTranslation,
-        },
-      },
-    ];
+    };
   });
 
-  const wordActivities = scene.words.map(([word, meaning], index): ActivitySeed => ({
+  const wordActivities = curriculum.words.map(([word, meaning], index): ActivitySeed => ({
     type: ActivityType.FLASHCARD,
     title: `Nhìn tranh, nghe và đoán từ ${index + 1}`,
     instruction: "Nhìn tranh trước, bấm nghe nếu cần rồi tự đoán từ tiếng Anh trước khi mở đáp án.",
@@ -282,30 +344,35 @@ export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLesson
       prompt: "Tranh này mô tả từ tiếng Anh nào?",
       imageUrl: vocabularyImageUrl,
       imageAlt: `Tranh minh họa cho từ ${meaning}`,
-      spriteIndex: index,
+      spriteIndex: curriculum.visualIndexes?.[index] ?? index,
       audioText: word,
       front: word,
       back: meaning,
       example: `Nghe lại và ghi nhớ: ${word}.`,
     },
   }));
-  wordActivities.push({
-    type: ActivityType.MATCHING,
-    title: "Ghép từ với nghĩa",
-    instruction: "Ghép đủ sáu từ tiếng Anh với nghĩa tiếng Việt để kết thúc phần từ vựng.",
-    order: 7,
-    payload: {
-      prompt: `Ôn lại toàn bộ từ vựng chủ đề ${unit.theme}.`,
-      pairs: scene.words.map(([left, right]) => ({ left, right })),
-    },
-  });
+  if (curriculum.words.length) {
+    wordActivities.push({
+      type: ActivityType.MATCHING,
+      title: "Ghép từ với nghĩa",
+      instruction: "Ghép đủ bốn từ tiếng Anh với nghĩa tiếng Việt để kết thúc phần từ vựng.",
+      order: curriculum.words.length + 1,
+      payload: {
+        prompt: `Ôn lại toàn bộ từ vựng chủ đề ${unit.theme}.`,
+        pairs: curriculum.words.map(([left, right]) => ({ left, right })),
+      },
+    });
+  }
 
-  return [
-    { slug: "tu-vung", title: "Từ vựng qua hình ảnh & âm thanh", description: "Học đủ sáu từ chủ đề bằng cách nhìn hình, nghe và tự đoán trước khi xem đáp án.", activities: wordActivities },
-    { slug: "mau-cau", title: "Mẫu câu phản xạ đời thực", description: "Nghe các câu hỏi–đáp cốt lõi trong tình huống thật và tự đoán trước khi xem đáp án.", activities: reflexActivities },
-  ];
+  const lessons: PreschoolLessonSeed[] = [];
+  if (wordActivities.length) lessons.push({ slug: "tu-vung", title: "Từ vựng qua hình ảnh & âm thanh", description: "Học đúng bốn từ của chủ đề bằng cách nhìn tranh, nghe và tự đoán trước khi xem đáp án.", activities: wordActivities });
+  if (reflexActivities.length) lessons.push({ slug: "mau-cau", title: "Mẫu câu phản xạ đời thực", description: "Nghe đúng các mẫu câu cốt lõi của chủ đề trong tình huống thật và tự đoán trước khi xem đáp án.", activities: reflexActivities });
+  return lessons;
 }
 
 export function getPreschoolScene(slug: string) {
-  return scenes[slug];
+  const scene = scenes[slug];
+  const curriculum = alignedCurriculum[slug];
+  if (!scene || !curriculum) return undefined;
+  return { ...scene, words: curriculum.words, sentences: curriculum.sentences, visualIndexes: curriculum.visualIndexes, vocabularyAsset: curriculum.vocabularyAsset };
 }

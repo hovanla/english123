@@ -74,6 +74,20 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
     if (response.ok) setResult({ score: data.score, passed: data.passed });
   }
 
+  async function rateFlashcardAndAdvance(known: boolean) {
+    setPending(true);
+    const response = await fetch("/api/attempts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ activityId: activity.id, answer: { known }, durationSeconds: 0 }),
+    });
+    const data = await response.json();
+    setPending(false);
+    if (!response.ok) return;
+    if (index < activities.length - 1) resetActivity(index + 1);
+    else setResult({ score: data.score, passed: data.passed });
+  }
+
   function startSpeech() {
     const speechWindow = window as SpeechWindow;
     const Recognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
@@ -116,9 +130,20 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
           <div>
             {Boolean(payload.scenario) && <p className="rounded-2xl bg-amber-50 p-4 text-base font-bold leading-6 text-amber-950"><span className="mb-1.5 block text-[11px] font-black uppercase tracking-wider text-amber-700">Tình huống đời thật</span>{String(payload.scenario)}</p>}
             {!payload.scenario && <p className="rounded-2xl bg-sky-50 p-3 text-sm font-bold leading-5 text-sky-950 sm:p-4 sm:text-base sm:leading-6"><span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-sky-700 sm:text-[11px]">Nhìn tranh và suy nghĩ</span>{String(payload.prompt)}</p>}
-            {isVisualGuess && !revealed && <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center">
-              <div className="flex flex-wrap justify-center gap-2"><button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900 hover:bg-sky-200"><span className="text-lg">🔊</span> Nghe từ</button><button type="button" onClick={() => setRevealed(true)} className="min-h-11 rounded-xl bg-amber-500 px-5 py-2 font-black text-amber-950 hover:bg-amber-400">Xem đáp án</button></div>
-              <p className="mt-2 text-xs font-bold text-amber-950">Đoán trong đầu trước khi mở đáp án nhé.</p>
+            {isHiddenGuess && <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center">
+              {!revealed ? <>
+                <div className="flex flex-wrap justify-center gap-2"><button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900 hover:bg-sky-200"><span className="text-lg">🔊</span> {isAudioGuess ? "Nghe câu" : "Nghe từ"}</button><button type="button" onClick={() => setRevealed(true)} className="min-h-11 rounded-xl bg-amber-500 px-5 py-2 font-black text-amber-950 hover:bg-amber-400">Xem đáp án</button></div>
+                <p className="mt-2 text-xs font-bold text-amber-950">Đoán trong đầu trước khi mở đáp án nhé.</p>
+              </> : <>
+                <p className="text-2xl font-black text-slate-950">{String(payload.front)}</p>
+                <p className="mt-1 text-base font-bold text-amber-900">{String(payload.back)}</p>
+                {Boolean(payload.example) && <p className="mt-1 text-xs text-slate-600">{String(payload.example)}</p>}
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="min-h-11 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900">🔊 Nghe lại</button>
+                  <button type="button" disabled={pending} onClick={() => void rateFlashcardAndAdvance(false)} className="min-h-11 rounded-xl border border-amber-400 bg-white px-4 py-2 font-black text-amber-900 disabled:opacity-50">Chưa nhớ</button>
+                  <button type="button" disabled={pending} onClick={() => void rateFlashcardAndAdvance(true)} className="min-h-11 rounded-xl bg-emerald-700 px-4 py-2 font-black text-white disabled:opacity-50">Nhớ rồi →</button>
+                </div>
+              </>}
             </div>}
           </div>
         </div>}
@@ -129,7 +154,7 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
 
         {(activity.type === "LISTEN_CHOOSE" || activity.type === "LISTEN_TYPE") && <div className="mt-6 text-center"><button type="button" onClick={() => speak(String(payload.text || ""))} className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-sky-100 px-6 py-3 font-black text-sky-900 hover:bg-sky-200"><span className="text-2xl">🔊</span> Nghe lại</button><p className="mt-2 text-xs font-bold text-slate-500">Từ tiếng Anh được giấu để em luyện nghe thật</p></div>}
 
-        {activity.type === "FLASHCARD" && !(isVisualGuess && !revealed) && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
+        {activity.type === "FLASHCARD" && !(imageUrl && isHiddenGuess) && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
           {isHiddenGuess && !revealed ? <>
             {isAudioGuess ? <>
               <div className="text-5xl" aria-hidden="true">🎧</div>
