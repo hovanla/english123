@@ -1,6 +1,6 @@
 import { AssetLicense, ContentStatus, Prisma } from "@prisma/client";
 import { prisma } from "../src/lib/prisma";
-import { buildPreschoolLessons, getPreschoolScene, preschoolImageUrl, preschoolVocabularyImageUrl } from "../src/lib/preschool-content";
+import { buildPreschoolLessons, getPreschoolScene, preschoolImageUrl, preschoolSentenceImageUrl, preschoolVocabularyImageUrl } from "../src/lib/preschool-content";
 
 const lessonAliases: Record<string, string[]> = {
   "tu-vung": ["nhin-nghe-doan-tu", "words"],
@@ -27,6 +27,7 @@ async function main() {
     });
     const scene = getPreschoolScene(unit.slug);
     const vocabularyUrl = preschoolVocabularyImageUrl(unit.slug);
+    const sentenceUrl = preschoolSentenceImageUrl(unit.slug);
 
     await prisma.unit.update({
       where: { id: unit.id },
@@ -43,6 +44,15 @@ async function main() {
         altText: scene?.imageAlt || `Minh họa ${unit.theme}`, source: "English123 · OpenAI image generation", license: AssetLicense.OWNED, width: 256, height: 307,
       },
       update: { altText: scene?.imageAlt || `Minh họa ${unit.theme}`, source: "English123 · OpenAI image generation", license: AssetLicense.OWNED, width: 256, height: 307 },
+    });
+
+    if (scene?.sentences.length) await prisma.asset.upsert({
+      where: { url: sentenceUrl },
+      create: {
+        url: sentenceUrl, pathname: sentenceUrl.replace(/^\//, ""), contentType: "image/webp",
+        altText: `Bộ tranh tình huống mẫu câu chủ đề ${unit.theme}`, source: "English123 · OpenAI image generation", license: AssetLicense.OWNED, width: 1536, height: 1024,
+      },
+      update: { pathname: sentenceUrl.replace(/^\//, ""), altText: `Bộ tranh tình huống mẫu câu chủ đề ${unit.theme}`, source: "English123 · OpenAI image generation", license: AssetLicense.OWNED, width: 1536, height: 1024 },
     });
 
     await prisma.asset.upsert({

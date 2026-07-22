@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 type Activity = { id: string; type: string; title: string; instruction: string; payload: Record<string, unknown>; order: number };
@@ -33,7 +34,7 @@ function LessonImage({ src, alt, spriteIndex, priority }: { src: string; alt: st
   </div>;
 }
 
-export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
+export default function LessonPlayer({ lessons, completionHref, completionLabel }: { lessons: Lesson[]; completionHref: string; completionLabel: string }) {
   const activities = useMemo(() => lessons.flatMap((lesson, lessonIndex) => lesson.activities.map((activity) => ({ ...activity, lessonTitle: lesson.title, lessonIndex }))), [lessons]);
   const lessonStarts = useMemo(() => lessons.map((_, lessonIndex) => activities.findIndex((activity) => activity.lessonIndex === lessonIndex)), [activities, lessons]);
   const [index, setIndex] = useState(0);
@@ -209,7 +210,7 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
           {Boolean(payload.explanation) && <p className="mt-3 font-bold">Đáp án: {String(payload.explanation)}</p>}
           {Boolean(payload.modelAnswer) && <p className="mt-2 text-sm leading-6">{String(payload.modelAnswer)}</p>}
           {result.passed && index < activities.length - 1 && <button type="button" onClick={() => resetActivity(index + 1)} className="mt-3 rounded-xl bg-emerald-700 px-4 py-2.5 font-black text-white">Phản xạ tiếp theo →</button>}
-          {result.passed && index === activities.length - 1 && <a href="/dashboard" className="mt-3 inline-block rounded-xl bg-emerald-700 px-4 py-2.5 font-black text-white">Hoàn thành unit</a>}
+          {result.passed && index === activities.length - 1 && <Link href={completionHref} className="mt-3 inline-block rounded-xl bg-emerald-700 px-4 py-2.5 font-black text-white">{completionLabel}</Link>}
           {!result.passed && <button type="button" onClick={() => { setResult(null); setAnswer({}); setRevealed(false); }} className="mt-3 rounded-xl bg-amber-500 px-4 py-2.5 font-black">Nghe và đoán lại</button>}
         </div> : activity.type !== "FLASHCARD" && <button type="button" disabled={pending || Object.keys(answer).length === 0} onClick={() => void submit()} className="mt-4 min-h-12 rounded-xl bg-emerald-700 px-5 py-2.5 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{pending ? "Đang kiểm tra…" : "Kiểm tra phản xạ"}</button>}
       </div>

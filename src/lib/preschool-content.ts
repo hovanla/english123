@@ -304,12 +304,16 @@ export function preschoolVocabularyImageUrl(slug: string) {
   return `/preschool/vocabulary/${asset}.webp`;
 }
 
+export function preschoolSentenceImageUrl(slug: string) {
+  return `/preschool/sentences/${slug}.webp`;
+}
+
 export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLessonSeed[] {
   const baseScene = scenes[unit.slug];
   const curriculum = alignedCurriculum[unit.slug];
   if (!baseScene || !curriculum) throw new Error(`Missing preschool scene content for ${unit.slug}`);
-  const imageUrl = preschoolImageUrl(unit.slug);
   const vocabularyImageUrl = preschoolVocabularyImageUrl(unit.slug);
+  const sentenceImageUrl = preschoolSentenceImageUrl(unit.slug);
 
   const reflexActivities = curriculum.sentences.map(([target, translation], index): ActivitySeed => {
     const number = index + 1;
@@ -325,8 +329,9 @@ export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLesson
         mode: "AUDIO_GUESS",
         prompt: cue,
         scenario: cue,
-        imageUrl,
-        imageAlt: baseScene.imageAlt,
+        imageUrl: sentenceImageUrl,
+        imageAlt: `Tranh tình huống cho mẫu câu ${target}`,
+        spriteIndex: index,
         audioText: target,
         front: target,
         back: translation,

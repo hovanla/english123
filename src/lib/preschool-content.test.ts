@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validateActivityPayload } from "./activities";
-import { buildPreschoolLessons, getPreschoolScene, preschoolVocabularyImageUrl } from "./preschool-content";
+import { buildPreschoolLessons, getPreschoolScene, preschoolSentenceImageUrl, preschoolVocabularyImageUrl } from "./preschool-content";
 
 const expectedWords: Record<string, string[]> = {
   hello: [],
@@ -66,6 +66,7 @@ describe("preschool curriculum aligned to the public reference outline", () => {
       const actual = sentenceLesson?.activities.map((activity) => activity.payload.front) || [];
       expect(actual, `sentences ${slug}`).toEqual(expectedSentences[slug] || []);
       expect(sentenceLesson?.activities.every((activity) => activity.payload.mode === "AUDIO_GUESS" && !("options" in activity.payload)) ?? true).toBe(true);
+      expect(sentenceLesson?.activities.every((activity, index) => activity.payload.imageUrl === preschoolSentenceImageUrl(slug) && activity.payload.spriteIndex === index) ?? true).toBe(true);
     }
   });
 });
