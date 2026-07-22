@@ -36,9 +36,10 @@ describe("preschool vocabulary and sentence curriculum", () => {
       });
       expect(lessons.map((lesson) => lesson.slug)).toEqual(["tu-vung", "mau-cau"]);
       expect(lessons.flatMap((lesson) => lesson.activities).every((activity) => validateActivityPayload(activity.type, activity.payload).success)).toBe(true);
-      expect(lessons[0].activities).toHaveLength(13);
+      expect(lessons[0].activities).toHaveLength(7);
       expect(lessons[0].activities.filter((activity) => activity.payload.mode === "VISUAL_GUESS")).toHaveLength(6);
-      expect(lessons[0].activities.filter((activity) => activity.payload.mode === "AUDIO_GUESS")).toHaveLength(6);
+      expect(lessons[0].activities.filter((activity) => activity.payload.mode === "AUDIO_GUESS")).toHaveLength(0);
+      expect(lessons[0].activities.slice(0, 6).every((activity, index) => activity.payload.imageUrl === `/preschool/vocabulary/${slug}.webp` && activity.payload.spriteIndex === index && activity.payload.audioText)).toBe(true);
       expect(lessons[1].activities).toHaveLength(slug === "hello" ? 6 : 4);
       expect(lessons[1].activities.every((activity) => activity.type === "FLASHCARD" && activity.payload.mode === "AUDIO_GUESS" && !("options" in activity.payload))).toBe(true);
       expect(lessons.flatMap((lesson) => lesson.activities).some((activity) => activity.title.includes("Chữ") || activity.title.includes("Số"))).toBe(false);

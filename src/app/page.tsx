@@ -38,7 +38,7 @@ export default async function Home() {
           <p className="text-sm font-bold text-emerald-700">Lộ trình Mầm non</p>
           <p className="mt-2 text-4xl font-black">20 unit</p>
           <div className="mt-7 space-y-4 text-sm">
-            {["40 lesson Từ vựng & Mẫu câu", "342 hoạt động nhìn–nghe–đoán", "6 từ và ít nhất 4 câu mỗi chủ đề", "Ôn tập cách quãng 1–3–7–14 ngày"].map((item) => <p key={item} className="flex gap-3"><span className="text-emerald-600">✓</span>{item}</p>)}
+            {["40 lesson Từ vựng & Mẫu câu", "222 hoạt động nhìn–nghe–đoán", "6 từ và ít nhất 4 câu mỗi chủ đề", "Ôn tập cách quãng 1–3–7–14 ngày"].map((item) => <p key={item} className="flex gap-3"><span className="text-emerald-600">✓</span>{item}</p>)}
           </div>
         </aside>
       </section>

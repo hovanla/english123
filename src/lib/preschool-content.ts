@@ -223,10 +223,15 @@ export function preschoolImageUrl(slug: string) {
   return `/preschool/scenes/${slug}.webp`;
 }
 
+export function preschoolVocabularyImageUrl(slug: string) {
+  return `/preschool/vocabulary/${slug}.webp`;
+}
+
 export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLessonSeed[] {
   const scene = scenes[unit.slug];
   if (!scene) throw new Error(`Missing preschool scene content for ${unit.slug}`);
   const imageUrl = preschoolImageUrl(unit.slug);
+  const vocabularyImageUrl = preschoolVocabularyImageUrl(unit.slug);
 
   const reflexActivities = scene.situations.flatMap((situation, index): ActivitySeed[] => {
     const number = index + 1;
@@ -267,43 +272,28 @@ export function buildPreschoolLessons(unit: PreschoolUnitInput): PreschoolLesson
     ];
   });
 
-  const wordActivities = scene.words.flatMap(([word, meaning], index): ActivitySeed[] => {
-    return [
-      {
-        type: ActivityType.FLASHCARD,
-        title: `Nhìn hình và đoán từ ${index + 1}`,
-        instruction: "Chỉ nhìn hình, tự đoán từ tiếng Anh rồi mới mở đáp án.",
-        order: index * 2 + 1,
-        payload: {
-          mode: "VISUAL_GUESS",
-          prompt: "Hình này gợi cho em từ tiếng Anh nào?",
-          visual: scene.visuals[index] || "✨",
-          front: word,
-          back: meaning,
-          example: `Bấm nghe lại để ghi nhớ: ${word}.`,
-        },
-      },
-      {
-        type: ActivityType.FLASHCARD,
-        title: `Nghe và đoán nghĩa ${index + 1}`,
-        instruction: "Không nhìn từ. Bấm nghe, tự đoán từ và nghĩa rồi mới xem đáp án.",
-        order: index * 2 + 2,
-        payload: {
-          mode: "AUDIO_GUESS",
-          prompt: "Em nghe thấy từ nào?",
-          audioText: word,
-          visual: "🎧",
-          front: word,
-          back: meaning,
-        },
-      },
-    ];
-  });
+  const wordActivities = scene.words.map(([word, meaning], index): ActivitySeed => ({
+    type: ActivityType.FLASHCARD,
+    title: `Nhìn tranh, nghe và đoán từ ${index + 1}`,
+    instruction: "Nhìn tranh trước, bấm nghe nếu cần rồi tự đoán từ tiếng Anh trước khi mở đáp án.",
+    order: index + 1,
+    payload: {
+      mode: "VISUAL_GUESS",
+      prompt: "Tranh này mô tả từ tiếng Anh nào?",
+      imageUrl: vocabularyImageUrl,
+      imageAlt: `Tranh minh họa cho từ ${meaning}`,
+      spriteIndex: index,
+      audioText: word,
+      front: word,
+      back: meaning,
+      example: `Nghe lại và ghi nhớ: ${word}.`,
+    },
+  }));
   wordActivities.push({
     type: ActivityType.MATCHING,
     title: "Ghép từ với nghĩa",
     instruction: "Ghép đủ sáu từ tiếng Anh với nghĩa tiếng Việt để kết thúc phần từ vựng.",
-    order: wordActivities.length + 1,
+    order: 7,
     payload: {
       prompt: `Ôn lại toàn bộ từ vựng chủ đề ${unit.theme}.`,
       pairs: scene.words.map(([left, right]) => ({ left, right })),

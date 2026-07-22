@@ -1,6 +1,6 @@
 import { AssetLicense, ContentStatus, Prisma } from "@prisma/client";
 import { prisma } from "../src/lib/prisma";
-import { buildPreschoolLessons, getPreschoolScene, preschoolImageUrl } from "../src/lib/preschool-content";
+import { buildPreschoolLessons, getPreschoolScene, preschoolImageUrl, preschoolVocabularyImageUrl } from "../src/lib/preschool-content";
 
 const lessonAliases: Record<string, string[]> = {
   "tu-vung": ["nhin-nghe-doan-tu", "words"],
@@ -44,6 +44,15 @@ async function main() {
       update: { altText: scene?.imageAlt || `Minh họa ${unit.theme}`, source: "English123 · OpenAI image generation", license: AssetLicense.OWNED, width: 256, height: 307 },
     });
 
+    await prisma.asset.upsert({
+      where: { url: preschoolVocabularyImageUrl(unit.slug) },
+      create: {
+        url: preschoolVocabularyImageUrl(unit.slug), pathname: `preschool/vocabulary/${unit.slug}.webp`, contentType: "image/webp",
+        altText: `Bộ sáu tranh từ vựng chủ đề ${unit.theme}`, source: "English123 · OpenAI image generation", license: AssetLicense.OWNED, width: 1200, height: 800,
+      },
+      update: { altText: `Bộ sáu tranh từ vựng chủ đề ${unit.theme}`, source: "English123 · OpenAI image generation", license: AssetLicense.OWNED, width: 1200, height: 800 },
+    });
+
     const activeLessonIds: string[] = [];
     for (const [lessonIndex, lessonSeed] of lessons.entries()) {
       const aliases = lessonAliases[lessonSeed.slug] || [];
@@ -52,13 +61,13 @@ async function main() {
 
       if (!lesson) {
         lesson = await prisma.lesson.create({
-          data: { unitId: unit.id, slug: lessonSeed.slug, title: lessonSeed.title, description: lessonSeed.description, order: lessonIndex + 1, estimatedMinutes: lessonIndex === 0 ? 9 : 7, status: ContentStatus.PUBLISHED },
+          data: { unitId: unit.id, slug: lessonSeed.slug, title: lessonSeed.title, description: lessonSeed.description, order: lessonIndex + 1, estimatedMinutes: lessonIndex === 0 ? 6 : 7, status: ContentStatus.PUBLISHED },
           include: { activities: true },
         });
       } else {
         lesson = await prisma.lesson.update({
           where: { id: lesson.id },
-          data: { slug: lessonSeed.slug, title: lessonSeed.title, description: lessonSeed.description, order: lessonIndex + 1, estimatedMinutes: lessonIndex === 0 ? 9 : 7, status: ContentStatus.PUBLISHED },
+          data: { slug: lessonSeed.slug, title: lessonSeed.title, description: lessonSeed.description, order: lessonIndex + 1, estimatedMinutes: lessonIndex === 0 ? 6 : 7, status: ContentStatus.PUBLISHED },
           include: { activities: true },
         });
       }

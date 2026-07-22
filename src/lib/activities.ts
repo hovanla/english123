@@ -10,6 +10,7 @@ const basePrompt = {
   visual: z.string().optional(),
   imageUrl: z.string().min(1).optional(),
   imageAlt: z.string().optional(),
+  spriteIndex: z.number().int().min(0).max(5).optional(),
   audioUrl: z.string().min(1).optional(),
   audioText: z.string().min(1).optional(),
   mode: z.enum(["VISUAL_GUESS", "AUDIO_GUESS", "STANDARD"]).optional(),

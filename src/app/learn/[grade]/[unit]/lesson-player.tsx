@@ -17,6 +17,22 @@ function speak(text: string) {
   window.speechSynthesis.speak(utterance);
 }
 
+function LessonImage({ src, alt, spriteIndex, priority }: { src: string; alt: string; spriteIndex?: number; priority: boolean }) {
+  if (spriteIndex === undefined) {
+    return <div className="relative mx-auto aspect-[5/6] w-full max-w-[240px] overflow-hidden rounded-2xl bg-amber-50">
+      <Image src={src} alt={alt} fill sizes="(max-width: 768px) 80vw, 220px" className="object-cover" priority={priority}/>
+    </div>;
+  }
+
+  const column = spriteIndex % 3;
+  const row = Math.floor(spriteIndex / 3);
+  return <div className="relative mx-auto aspect-square w-full max-w-[190px] overflow-hidden rounded-2xl bg-sky-50 ring-1 ring-sky-100 sm:max-w-[260px]">
+    <div className="absolute" style={{ width: "300%", height: "200%", left: `-${column * 100}%`, top: `-${row * 100}%` }}>
+      <Image src={src} alt={alt} fill sizes="(max-width: 768px) 90vw, 780px" className="object-fill" priority={priority}/>
+    </div>
+  </div>;
+}
+
 export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
   const activities = useMemo(() => lessons.flatMap((lesson, lessonIndex) => lesson.activities.map((activity) => ({ ...activity, lessonTitle: lesson.title, lessonIndex }))), [lessons]);
   const lessonStarts = useMemo(() => lessons.map((_, lessonIndex) => activities.findIndex((activity) => activity.lessonIndex === lessonIndex)), [activities, lessons]);
@@ -33,6 +49,7 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
   const options = (payload.options || []) as Array<{ id: string; text: string }>;
   const pairs = (payload.pairs || []) as Array<{ left: string; right: string }>;
   const imageUrl = typeof payload.imageUrl === "string" ? payload.imageUrl : "";
+  const spriteIndex = typeof payload.spriteIndex === "number" ? payload.spriteIndex : undefined;
   const isVisualGuess = activity.type === "FLASHCARD" && payload.mode === "VISUAL_GUESS";
   const isAudioGuess = activity.type === "FLASHCARD" && payload.mode === "AUDIO_GUESS";
   const isHiddenGuess = isVisualGuess || isAudioGuess;
@@ -73,10 +90,10 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
   }
 
   return <section className="mt-4 grid gap-4 lg:grid-cols-[220px_1fr]">
-    <aside className="h-fit rounded-2xl bg-white p-3 shadow-sm lg:sticky lg:top-3">
+    <aside className="order-2 h-fit rounded-2xl bg-white p-3 shadow-sm lg:order-none lg:sticky lg:top-3">
       <p className="px-2 text-xs font-black uppercase tracking-wider text-emerald-700">Tiến độ unit</p>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><span className="block h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${progress}%` }}/></div>
-      <p className="mt-1.5 px-2 text-xs font-bold text-slate-500">{index + 1}/{activities.length} phản xạ</p>
+      <p className="mt-1.5 px-2 text-xs font-bold text-slate-500">Bước {index + 1}/{activities.length}</p>
       <div className="mt-3 space-y-1.5">{lessons.map((lesson, lessonIndex) => {
         const active = activity.lessonIndex === lessonIndex;
         return <button type="button" key={lesson.id} onClick={() => resetActivity(lessonStarts[lessonIndex])} className={`w-full rounded-xl p-2.5 text-left transition ${active ? "bg-emerald-800 text-white" : "bg-slate-50 hover:bg-emerald-50"}`}>
@@ -86,19 +103,23 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
       })}</div>
     </aside>
 
-    <article className="overflow-hidden rounded-2xl bg-white shadow-sm">
+    <article className="order-1 overflow-hidden rounded-2xl bg-white shadow-sm lg:order-none">
       <div className="border-b border-slate-100 p-4 sm:p-5">
         <p className="text-xs font-black uppercase tracking-wider text-emerald-700">{activity.lessonTitle} · {index + 1}/{activities.length}</p>
-        <h2 className="mt-2 text-2xl font-black">{activity.title}</h2>
-        <p className="mt-1 text-sm leading-6 text-slate-600">{activity.instruction}</p>
+        <h2 className="mt-2 text-xl font-black sm:text-2xl">{activity.title}</h2>
+        <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">{activity.instruction}</p>
       </div>
 
       <div className="p-4 sm:p-5">
-        {imageUrl && <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-center">
-          <div className="relative mx-auto aspect-[5/6] w-full max-w-[240px] overflow-hidden rounded-2xl bg-amber-50"><Image src={imageUrl} alt={String(payload.imageAlt || "Hình minh họa tình huống")} fill sizes="(max-width: 768px) 80vw, 220px" className="object-cover" priority={index === 0}/></div>
+        {imageUrl && <div className="grid gap-3 md:grid-cols-[220px_1fr] md:items-center">
+          <LessonImage src={imageUrl} alt={String(payload.imageAlt || "Hình minh họa tình huống")} spriteIndex={spriteIndex} priority={index === 0}/>
           <div>
             {Boolean(payload.scenario) && <p className="rounded-2xl bg-amber-50 p-4 text-base font-bold leading-6 text-amber-950"><span className="mb-1.5 block text-[11px] font-black uppercase tracking-wider text-amber-700">Tình huống đời thật</span>{String(payload.scenario)}</p>}
-            {!payload.scenario && <p className="rounded-2xl bg-sky-50 p-4 text-base font-bold leading-6 text-sky-950"><span className="mb-1.5 block text-[11px] font-black uppercase tracking-wider text-sky-700">Nhìn tranh và suy nghĩ</span>{String(payload.prompt)}</p>}
+            {!payload.scenario && <p className="rounded-2xl bg-sky-50 p-3 text-sm font-bold leading-5 text-sky-950 sm:p-4 sm:text-base sm:leading-6"><span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-sky-700 sm:text-[11px]">Nhìn tranh và suy nghĩ</span>{String(payload.prompt)}</p>}
+            {isVisualGuess && !revealed && <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center">
+              <div className="flex flex-wrap justify-center gap-2"><button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900 hover:bg-sky-200"><span className="text-lg">🔊</span> Nghe từ</button><button type="button" onClick={() => setRevealed(true)} className="min-h-11 rounded-xl bg-amber-500 px-5 py-2 font-black text-amber-950 hover:bg-amber-400">Xem đáp án</button></div>
+              <p className="mt-2 text-xs font-bold text-amber-950">Đoán trong đầu trước khi mở đáp án nhé.</p>
+            </div>}
           </div>
         </div>}
 
@@ -108,15 +129,15 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
 
         {(activity.type === "LISTEN_CHOOSE" || activity.type === "LISTEN_TYPE") && <div className="mt-6 text-center"><button type="button" onClick={() => speak(String(payload.text || ""))} className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-sky-100 px-6 py-3 font-black text-sky-900 hover:bg-sky-200"><span className="text-2xl">🔊</span> Nghe lại</button><p className="mt-2 text-xs font-bold text-slate-500">Từ tiếng Anh được giấu để em luyện nghe thật</p></div>}
 
-        {activity.type === "FLASHCARD" && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
+        {activity.type === "FLASHCARD" && !(isVisualGuess && !revealed) && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
           {isHiddenGuess && !revealed ? <>
             {isAudioGuess ? <>
               <div className="text-5xl" aria-hidden="true">🎧</div>
               <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="mt-3 inline-flex min-h-12 items-center gap-2 rounded-xl bg-sky-100 px-5 py-2.5 font-black text-sky-900 hover:bg-sky-200"><span className="text-xl">🔊</span> Nghe câu</button>
               <p className="mt-3 text-sm font-bold text-amber-950">Nghe kỹ và tự đoán trong đầu. Câu tiếng Anh vẫn đang được giấu.</p>
             </> : <>
-              <div className="text-5xl" aria-hidden="true">{String(payload.visual || "✨")}</div>
-              <p className="mt-3 text-sm font-bold text-amber-950">Đoán đáp án trong đầu trước nhé.</p>
+              <button type="button" onClick={() => speak(String(payload.audioText || payload.front || ""))} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900 hover:bg-sky-200"><span className="text-lg">🔊</span> Nghe từ</button>
+              <p className="mt-2 text-sm font-bold text-amber-950">Nhìn tranh, nghe nếu cần và đoán trong đầu trước nhé.</p>
             </>}
             <button type="button" onClick={() => setRevealed(true)} className="mt-3 rounded-xl bg-amber-500 px-5 py-2.5 font-black text-amber-950 hover:bg-amber-400">Xem đáp án</button>
           </> : <>
