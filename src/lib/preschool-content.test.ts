@@ -7,23 +7,49 @@ const slugs = [
   "fruit", "drinks", "snacks", "in-the-room", "at-home", "i-can", "pets", "the-farm", "the-zoo", "the-park",
 ];
 
-describe("preschool reflex curriculum", () => {
-  it("defines valid no-hint listening and real-life activities for all 20 units", () => {
-    for (const [index, slug] of slugs.entries()) {
-      expect(getPreschoolScene(slug), `scene ${slug}`).toBeTruthy();
+const referenceSentences: Record<string, string> = {
+  hello: "What's your name?",
+  family: "Who's this?",
+  feelings: "Are you happy?",
+  toys: "What's this?",
+  colors: "What color is it?",
+  face: "What are these?",
+  shapes: "This is a circle.",
+  clothes: "These are my pants.",
+  fruit: "I like apples.",
+  drinks: "Do you like milk?",
+  "at-home": "What are you doing?",
+  "the-farm": "Is it a duck?",
+  "the-zoo": "What's that?",
+};
+
+describe("preschool vocabulary and sentence curriculum", () => {
+  it("defines complete no-hint vocabulary and real-life sentences for all 20 units", () => {
+    for (const slug of slugs) {
+      const scene = getPreschoolScene(slug);
+      expect(scene, `scene ${slug}`).toBeTruthy();
+      expect(scene.words).toHaveLength(6);
+      expect(scene.visuals).toHaveLength(6);
       const lessons = buildPreschoolLessons({
         slug,
         theme: slug,
-        words: [["one", "một"], ["two", "hai"], ["three", "ba"], ["four", "bốn"]],
-        letters: [String.fromCharCode(65 + Math.min(index, 25))],
-        number: index % 2 === 0 ? index / 2 + 1 : undefined,
       });
-      expect(lessons.map((lesson) => lesson.slug)).toEqual(["phan-xa-doi-thuc", "nhin-nghe-doan-tu", "chu-cai-chu-so"]);
+      expect(lessons.map((lesson) => lesson.slug)).toEqual(["tu-vung", "mau-cau"]);
       expect(lessons.flatMap((lesson) => lesson.activities).every((activity) => validateActivityPayload(activity.type, activity.payload).success)).toBe(true);
-      expect(lessons[0].activities).toHaveLength(4);
-      expect(lessons[0].activities.every((activity) => activity.type === "FLASHCARD" && activity.payload.mode === "AUDIO_GUESS" && !("options" in activity.payload))).toBe(true);
-      expect(lessons[1].activities.filter((activity) => activity.payload.mode === "AUDIO_GUESS").every((activity) => !("options" in activity.payload))).toBe(true);
-      expect(lessons.slice(0, 2).flatMap((lesson) => lesson.activities).some((activity) => activity.type === "SPEAK_REPEAT" || activity.type === "LISTEN_CHOOSE")).toBe(false);
+      expect(lessons[0].activities).toHaveLength(13);
+      expect(lessons[0].activities.filter((activity) => activity.payload.mode === "VISUAL_GUESS")).toHaveLength(6);
+      expect(lessons[0].activities.filter((activity) => activity.payload.mode === "AUDIO_GUESS")).toHaveLength(6);
+      expect(lessons[1].activities).toHaveLength(slug === "hello" ? 6 : 4);
+      expect(lessons[1].activities.every((activity) => activity.type === "FLASHCARD" && activity.payload.mode === "AUDIO_GUESS" && !("options" in activity.payload))).toBe(true);
+      expect(lessons.flatMap((lesson) => lesson.activities).some((activity) => activity.title.includes("Chữ") || activity.title.includes("Số"))).toBe(false);
+    }
+  });
+
+  it("keeps the core sentence topic from the reference curriculum", () => {
+    for (const [slug, expected] of Object.entries(referenceSentences)) {
+      const scene = getPreschoolScene(slug);
+      const sentences = scene.situations.flatMap((situation) => [situation.target, situation.reply]);
+      expect(sentences, `core sentence ${slug}`).toContain(expected);
     }
   });
 });

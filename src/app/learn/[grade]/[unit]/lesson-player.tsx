@@ -103,7 +103,7 @@ export default function LessonPlayer({ lessons }: { lessons: Lesson[] }) {
         </div>}
 
         {!imageUrl && Boolean(payload.scenario) && <p className="rounded-2xl bg-amber-50 p-4 text-base font-bold leading-6 text-amber-950"><span className="mb-1.5 block text-[11px] font-black uppercase tracking-wider text-amber-700">Tình huống đời thật</span>{String(payload.scenario)}</p>}
-        {!imageUrl && Boolean(payload.visual) && <div className="mt-2 text-center text-6xl" aria-hidden="true">{String(payload.visual)}</div>}
+        {!imageUrl && activity.type !== "FLASHCARD" && Boolean(payload.visual) && <div className="mt-2 text-center text-6xl" aria-hidden="true">{String(payload.visual)}</div>}
         {!payload.scenario && !imageUrl && <p className="mt-3 text-center text-lg font-black leading-7">{String(payload.prompt)}</p>}
 
         {(activity.type === "LISTEN_CHOOSE" || activity.type === "LISTEN_TYPE") && <div className="mt-6 text-center"><button type="button" onClick={() => speak(String(payload.text || ""))} className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-sky-100 px-6 py-3 font-black text-sky-900 hover:bg-sky-200"><span className="text-2xl">🔊</span> Nghe lại</button><p className="mt-2 text-xs font-bold text-slate-500">Từ tiếng Anh được giấu để em luyện nghe thật</p></div>}

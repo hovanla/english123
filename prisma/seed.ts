@@ -110,7 +110,7 @@ async function main() {
   }
 
   const courses = new Map<string, string>();
-  const preschoolCourse = await prisma.course.create({ data: { gradeId: grades.get("mam-non")!, slug: "tieng-anh-mam-non", title: "Tiếng Anh Mầm non", description: "Lộ trình 20 unit cho trẻ 3–6 tuổi: chữ cái, chữ số, từ vựng, mẫu câu và trò chơi.", order: 1, status: PUBLISHED } });
+  const preschoolCourse = await prisma.course.create({ data: { gradeId: grades.get("mam-non")!, slug: "tieng-anh-mam-non", title: "Tiếng Anh Mầm non", description: "Lộ trình 20 unit cho trẻ 3–6 tuổi: từ vựng qua hình ảnh, nghe đoán và mẫu câu phản xạ đời thực.", order: 1, status: PUBLISHED } });
   courses.set("mam-non", preschoolCourse.id);
   for (let number = 1; number <= 5; number += 1) {
     const slug = `lop-${number}`;
@@ -125,8 +125,8 @@ async function main() {
     const lessons = unit.grade === "mam-non" ? buildPreschoolLessons(unit) : activitiesFor(unit);
     await prisma.unit.create({
       data: {
-        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
-        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? 6 : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
+        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.grade === "mam-non" ? `Học từ vựng và mẫu câu về ${unit.theme.toLowerCase()} qua hình ảnh, âm thanh và tình huống đời thực.` : unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
+        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? (lessonIndex === 0 ? 9 : 7) : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
       },
     });
   }
