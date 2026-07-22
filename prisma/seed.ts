@@ -2,6 +2,7 @@ import { ActivityType, ContentStatus, Prisma, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 import { buildPreschoolLessons, preschoolImageUrl } from "../src/lib/preschool-content";
+import { buildGradeOneLessons, gradeOneBoardUrl, gradeOneUnits } from "../src/lib/grade-one-content";
 
 const PUBLISHED = ContentStatus.PUBLISHED;
 const imageUrl = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80";
@@ -53,8 +54,7 @@ const preschoolUnits: UnitSeed[] = [
 
 const units: UnitSeed[] = [
   ...preschoolUnits,
-  { grade: "lop-1", slug: "hello-friends", title: "Hello, Friends!", theme: "Chào hỏi", description: "Chào hỏi và giới thiệu bản thân.", words: [["hello", "xin chào"], ["friend", "người bạn"], ["name", "tên"], ["goodbye", "tạm biệt"]], sentence: ["My name is Lan.", "Tên mình là Lan."], writing: "Viết một câu giới thiệu tên của em." },
-  { grade: "lop-1", slug: "colors-around-me", title: "Colors Around Me", theme: "Màu sắc", description: "Nhận biết màu sắc quanh em.", words: [["red", "màu đỏ"], ["blue", "màu xanh dương"], ["yellow", "màu vàng"], ["green", "màu xanh lá"]], sentence: ["It is a red ball.", "Đó là một quả bóng màu đỏ."], writing: "Viết một câu về màu em yêu thích." },
+  ...gradeOneUnits.map((unit): UnitSeed => ({ grade: "lop-1", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
   { grade: "lop-2", slug: "my-family", title: "My Family", theme: "Gia đình", description: "Gọi tên và giới thiệu người thân.", words: [["mother", "mẹ"], ["father", "bố"], ["sister", "chị hoặc em gái"], ["brother", "anh hoặc em trai"]], sentence: ["This is my mother.", "Đây là mẹ của mình."], writing: "Viết hai câu ngắn về gia đình em." },
   { grade: "lop-2", slug: "school-things", title: "School Things", theme: "Đồ dùng học tập", description: "Nói về những vật dụng trong lớp.", words: [["book", "quyển sách"], ["pencil", "bút chì"], ["ruler", "thước kẻ"], ["bag", "cặp sách"]], sentence: ["This is my new book.", "Đây là quyển sách mới của mình."], writing: "Viết hai đồ dùng có trong cặp của em." },
   { grade: "lop-3", slug: "daily-routines", title: "My Day", theme: "Hoạt động hằng ngày", description: "Kể về các hoạt động trong ngày.", words: [["wake up", "thức dậy"], ["breakfast", "bữa sáng"], ["study", "học"], ["sleep", "ngủ"]], sentence: ["I get up at seven.", "Mình thức dậy lúc bảy giờ."], writing: "Viết ba câu về một ngày của em." },
@@ -122,11 +122,12 @@ async function main() {
   for (const unit of units) {
     const order = (orderByGrade.get(unit.grade) || 0) + 1;
     orderByGrade.set(unit.grade, order);
-    const lessons = unit.grade === "mam-non" ? buildPreschoolLessons(unit) : activitiesFor(unit);
+    const gradeOneSeed = unit.grade === "lop-1" ? gradeOneUnits.find((item) => item.slug === unit.slug) : undefined;
+    const lessons = unit.grade === "mam-non" ? buildPreschoolLessons(unit) : gradeOneSeed ? buildGradeOneLessons(gradeOneSeed) : activitiesFor(unit);
     await prisma.unit.create({
       data: {
-        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.grade === "mam-non" ? `Học từ vựng và mẫu câu về ${unit.theme.toLowerCase()} qua hình ảnh, âm thanh và tình huống đời thực.` : unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
-        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? (lessonIndex === 0 ? 9 : 7) : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
+        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.grade === "mam-non" ? `Học từ vựng và mẫu câu về ${unit.theme.toLowerCase()} qua hình ảnh, âm thanh và tình huống đời thực.` : unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : gradeOneSeed ? gradeOneBoardUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
+        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? (lessonIndex === 0 ? 9 : 7) : gradeOneSeed ? (lessonIndex === 0 ? 6 : 5) : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
       },
     });
   }
@@ -138,7 +139,7 @@ async function main() {
       update: { role: Role.ADMIN, passwordHash: await bcrypt.hash(process.env.BOOTSTRAP_ADMIN_PASSWORD, 12) },
     });
   }
-  console.log(`Đã tạo ${gradeShells.length} cấp lớp, 6 khóa học và ${units.length} unit (20 unit Mầm non).`);
+  console.log(`Đã tạo ${gradeShells.length} cấp lớp, 6 khóa học và ${units.length} unit (20 unit Mầm non, 20 unit Lớp 1).`);
 }
 
 main().finally(() => prisma.$disconnect());

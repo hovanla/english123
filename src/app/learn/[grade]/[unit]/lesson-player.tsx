@@ -18,17 +18,17 @@ function speak(text: string) {
   window.speechSynthesis.speak(utterance);
 }
 
-function LessonImage({ src, alt, spriteIndex, priority }: { src: string; alt: string; spriteIndex?: number; priority: boolean }) {
+function LessonImage({ src, alt, spriteIndex, spriteColumns = 3, spriteRows = 2, priority }: { src: string; alt: string; spriteIndex?: number; spriteColumns?: number; spriteRows?: number; priority: boolean }) {
   if (spriteIndex === undefined) {
     return <div className="relative mx-auto aspect-[5/6] w-full max-w-[240px] overflow-hidden rounded-2xl bg-amber-50">
       <Image src={src} alt={alt} fill sizes="(max-width: 768px) 80vw, 220px" className="object-cover" priority={priority}/>
     </div>;
   }
 
-  const column = spriteIndex % 3;
-  const row = Math.floor(spriteIndex / 3);
+  const column = spriteIndex % spriteColumns;
+  const row = Math.floor(spriteIndex / spriteColumns);
   return <div className="relative mx-auto aspect-square w-full max-w-[190px] overflow-hidden rounded-2xl bg-sky-50 ring-1 ring-sky-100 sm:max-w-[260px]">
-    <div className="absolute" style={{ width: "300%", height: "200%", left: `-${column * 100}%`, top: `-${row * 100}%` }}>
+    <div className="absolute" style={{ width: `${spriteColumns * 100}%`, height: `${spriteRows * 100}%`, left: `-${column * 100}%`, top: `-${row * 100}%` }}>
       <Image src={src} alt={alt} fill sizes="(max-width: 768px) 90vw, 780px" className="object-fill" priority={priority}/>
     </div>
   </div>;
@@ -51,6 +51,8 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel 
   const pairs = (payload.pairs || []) as Array<{ left: string; right: string }>;
   const imageUrl = typeof payload.imageUrl === "string" ? payload.imageUrl : "";
   const spriteIndex = typeof payload.spriteIndex === "number" ? payload.spriteIndex : undefined;
+  const spriteColumns = typeof payload.spriteColumns === "number" ? payload.spriteColumns : 3;
+  const spriteRows = typeof payload.spriteRows === "number" ? payload.spriteRows : 2;
   const isVisualGuess = activity.type === "FLASHCARD" && payload.mode === "VISUAL_GUESS";
   const isAudioGuess = activity.type === "FLASHCARD" && payload.mode === "AUDIO_GUESS";
   const isHiddenGuess = isVisualGuess || isAudioGuess;
@@ -127,7 +129,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel 
 
       <div className="p-4 sm:p-5">
         {imageUrl && <div className="grid gap-3 md:grid-cols-[220px_1fr] md:items-center">
-          <LessonImage src={imageUrl} alt={String(payload.imageAlt || "Hình minh họa tình huống")} spriteIndex={spriteIndex} priority={index === 0}/>
+          <LessonImage src={imageUrl} alt={String(payload.imageAlt || "Hình minh họa tình huống")} spriteIndex={spriteIndex} spriteColumns={spriteColumns} spriteRows={spriteRows} priority={index === 0}/>
           <div>
             {Boolean(payload.scenario) && <p className="rounded-2xl bg-amber-50 p-4 text-base font-bold leading-6 text-amber-950"><span className="mb-1.5 block text-[11px] font-black uppercase tracking-wider text-amber-700">Tình huống đời thật</span>{String(payload.scenario)}</p>}
             {!payload.scenario && <p className="rounded-2xl bg-sky-50 p-3 text-sm font-bold leading-5 text-sky-950 sm:p-4 sm:text-base sm:leading-6"><span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-sky-700 sm:text-[11px]">Nhìn tranh và suy nghĩ</span>{String(payload.prompt)}</p>}
