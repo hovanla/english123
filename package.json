@@ -25,6 +25,7 @@
     "db:sync-preschool": "tsx scripts/sync-preschool-content.ts",
     "db:sync-grade-one": "tsx scripts/sync-grade-one-content.ts",
     "db:sync-grade-two": "tsx scripts/sync-grade-two-content.ts",
+    "db:sync-grade-three": "tsx scripts/sync-grade-three-content.ts",
     "db:studio": "prisma studio",
     "db:studio:local": "prisma studio --schema prisma/schema.local.prisma",
     "test": "vitest run",
