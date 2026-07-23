@@ -8,6 +8,7 @@ import { buildGradeThreeLessons, gradeThreeBoardUrl, gradeThreeUnits } from "../
 import { buildGradeFourLessons, gradeFourBoardUrl, gradeFourUnits } from "../src/lib/grade-four-content";
 import { buildGradeFiveLessons, gradeFiveBoardUrl, gradeFiveUnits } from "../src/lib/grade-five-content";
 import { buildGradeSixLessons, gradeSixBoardUrl, gradeSixUnits } from "../src/lib/grade-six-content";
+import { buildGradeSevenLessons, gradeSevenBoardUrl, gradeSevenUnits } from "../src/lib/grade-seven-content";
 
 const PUBLISHED = ContentStatus.PUBLISHED;
 const imageUrl = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80";
@@ -19,8 +20,8 @@ const gradeShells = [
   ["lop-3", "Lớp 3", "Tiểu học", "Đọc câu ngắn, nghe câu đơn và viết câu cơ bản.", 3],
   ["lop-4", "Lớp 4", "Tiểu học", "Tăng vốn từ theo chủ đề và luyện hỏi đáp ngắn.", 4],
   ["lop-5", "Lớp 5", "Tiểu học", "Củng cố giao tiếp và viết đoạn văn ngắn.", 5],
-  ["lop-6", "Lớp 6", "THCS", "Nội dung đang được biên soạn.", 6],
-  ["lop-7", "Lớp 7", "THCS", "Nội dung đang được biên soạn.", 7],
+  ["lop-6", "Lớp 6", "THCS", "Từ vựng và mẫu câu phản xạ theo 16 chủ đề.", 6],
+  ["lop-7", "Lớp 7", "THCS", "Từ vựng và mẫu câu phản xạ theo 16 chủ đề.", 7],
   ["lop-8", "Lớp 8", "THCS", "Nội dung đang được biên soạn.", 8],
   ["lop-9", "Lớp 9", "THCS", "Nội dung đang được biên soạn.", 9],
   ["lop-10", "Lớp 10", "THPT", "Nội dung đang được biên soạn.", 10],
@@ -65,6 +66,7 @@ const units: UnitSeed[] = [
   ...gradeFourUnits.map((unit): UnitSeed => ({ grade: "lop-4", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
   ...gradeFiveUnits.map((unit): UnitSeed => ({ grade: "lop-5", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
   ...gradeSixUnits.map((unit): UnitSeed => ({ grade: "lop-6", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
+  ...gradeSevenUnits.map((unit): UnitSeed => ({ grade: "lop-7", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
 ];
 
 function activitiesFor(unit: UnitSeed) {
@@ -114,7 +116,7 @@ async function main() {
   const courses = new Map<string, string>();
   const preschoolCourse = await prisma.course.create({ data: { gradeId: grades.get("mam-non")!, slug: "tieng-anh-mam-non", title: "Tiếng Anh Mầm non", description: "Lộ trình 20 unit cho trẻ 3–6 tuổi: từ vựng qua hình ảnh, nghe đoán và mẫu câu phản xạ đời thực.", order: 1, status: PUBLISHED } });
   courses.set("mam-non", preschoolCourse.id);
-  for (let number = 1; number <= 6; number += 1) {
+  for (let number = 1; number <= 7; number += 1) {
     const slug = `lop-${number}`;
     const course = await prisma.course.create({ data: { gradeId: grades.get(slug)!, slug: `tieng-anh-${slug}`, title: `Tiếng Anh Lớp ${number}`, description: `Lộ trình tiếng Anh nền tảng dành cho học sinh Lớp ${number}.`, order: 1, status: PUBLISHED } });
     courses.set(slug, course.id);
@@ -130,11 +132,12 @@ async function main() {
     const gradeFourSeed = unit.grade === "lop-4" ? gradeFourUnits.find((item) => item.slug === unit.slug) : undefined;
     const gradeFiveSeed = unit.grade === "lop-5" ? gradeFiveUnits.find((item) => item.slug === unit.slug) : undefined;
     const gradeSixSeed = unit.grade === "lop-6" ? gradeSixUnits.find((item) => item.slug === unit.slug) : undefined;
-    const lessons = unit.grade === "mam-non" ? buildPreschoolLessons(unit) : gradeOneSeed ? buildGradeOneLessons(gradeOneSeed) : gradeTwoSeed ? buildGradeTwoLessons(gradeTwoSeed) : gradeThreeSeed ? buildGradeThreeLessons(gradeThreeSeed) : gradeFourSeed ? buildGradeFourLessons(gradeFourSeed) : gradeFiveSeed ? buildGradeFiveLessons(gradeFiveSeed) : gradeSixSeed ? buildGradeSixLessons(gradeSixSeed) : activitiesFor(unit);
+    const gradeSevenSeed = unit.grade === "lop-7" ? gradeSevenUnits.find((item) => item.slug === unit.slug) : undefined;
+    const lessons = unit.grade === "mam-non" ? buildPreschoolLessons(unit) : gradeOneSeed ? buildGradeOneLessons(gradeOneSeed) : gradeTwoSeed ? buildGradeTwoLessons(gradeTwoSeed) : gradeThreeSeed ? buildGradeThreeLessons(gradeThreeSeed) : gradeFourSeed ? buildGradeFourLessons(gradeFourSeed) : gradeFiveSeed ? buildGradeFiveLessons(gradeFiveSeed) : gradeSixSeed ? buildGradeSixLessons(gradeSixSeed) : gradeSevenSeed ? buildGradeSevenLessons(gradeSevenSeed) : activitiesFor(unit);
     await prisma.unit.create({
       data: {
-        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.grade === "mam-non" ? `Học từ vựng và mẫu câu về ${unit.theme.toLowerCase()} qua hình ảnh, âm thanh và tình huống đời thực.` : unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : gradeOneSeed ? gradeOneBoardUrl(unit.slug) : gradeTwoSeed ? gradeTwoBoardUrl(unit.slug) : gradeThreeSeed ? gradeThreeBoardUrl(unit.slug) : gradeFourSeed ? gradeFourBoardUrl(unit.slug) : gradeFiveSeed ? gradeFiveBoardUrl(unit.slug) : gradeSixSeed ? gradeSixBoardUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
-        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? (lessonIndex === 0 ? 9 : 7) : gradeOneSeed ? (lessonIndex === 0 ? 6 : 5) : gradeTwoSeed ? (lessonIndex === 0 ? 7 : 5) : gradeThreeSeed ? (lessonIndex === 0 ? 9 : 5) : gradeFourSeed ? (lessonIndex === 0 ? 10 : 5) : gradeFiveSeed ? (lessonIndex === 0 ? 11 : 5) : gradeSixSeed ? (lessonIndex === 0 ? 11 : 5) : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
+        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.grade === "mam-non" ? `Học từ vựng và mẫu câu về ${unit.theme.toLowerCase()} qua hình ảnh, âm thanh và tình huống đời thực.` : unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : gradeOneSeed ? gradeOneBoardUrl(unit.slug) : gradeTwoSeed ? gradeTwoBoardUrl(unit.slug) : gradeThreeSeed ? gradeThreeBoardUrl(unit.slug) : gradeFourSeed ? gradeFourBoardUrl(unit.slug) : gradeFiveSeed ? gradeFiveBoardUrl(unit.slug) : gradeSixSeed ? gradeSixBoardUrl(unit.slug) : gradeSevenSeed ? gradeSevenBoardUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
+        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? (lessonIndex === 0 ? 9 : 7) : gradeOneSeed ? (lessonIndex === 0 ? 6 : 5) : gradeTwoSeed ? (lessonIndex === 0 ? 7 : 5) : gradeThreeSeed ? (lessonIndex === 0 ? 9 : 5) : gradeFourSeed ? (lessonIndex === 0 ? 10 : 5) : gradeFiveSeed ? (lessonIndex === 0 ? 11 : 5) : gradeSixSeed || gradeSevenSeed ? (lessonIndex === 0 ? 10 : 5) : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
       },
     });
   }
@@ -146,7 +149,7 @@ async function main() {
       update: { role: Role.ADMIN, passwordHash: await bcrypt.hash(process.env.BOOTSTRAP_ADMIN_PASSWORD, 12) },
     });
   }
-  console.log(`Đã tạo ${gradeShells.length} cấp lớp, 7 khóa học và ${units.length} unit (20 unit Mầm non, 20 unit Lớp 1–5, 16 unit Lớp 6).`);
+  console.log(`Đã tạo ${gradeShells.length} cấp lớp, 8 khóa học và ${units.length} unit (20 unit Mầm non, 20 unit Lớp 1–5, 16 unit Lớp 6–7).`);
 }
 
 main().finally(() => prisma.$disconnect());
