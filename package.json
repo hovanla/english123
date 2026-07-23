@@ -27,6 +27,7 @@
     "db:sync-grade-two": "tsx scripts/sync-grade-two-content.ts",
     "db:sync-grade-three": "tsx scripts/sync-grade-three-content.ts",
     "db:sync-grade-four": "tsx scripts/sync-grade-four-content.ts",
+    "db:sync-grade-five": "tsx scripts/sync-grade-five-content.ts",
     "db:studio": "prisma studio",
     "db:studio:local": "prisma studio --schema prisma/schema.local.prisma",
     "test": "vitest run",
