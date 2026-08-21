@@ -21,6 +21,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
+    "admin:reset": "tsx scripts/reset-admin-password.ts",
     "db:legacy": "tsx scripts/migrate-legacy.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:sync-preschool": "tsx scripts/sync-preschool-content.ts",
