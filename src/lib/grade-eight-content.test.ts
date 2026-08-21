@@ -24,7 +24,8 @@ describe("grade eight curriculum", () => {
       expect(lessons[1].activities).toHaveLength(4);
       expect(lessons.flatMap((lesson) => lesson.activities).every((activity) => validateActivityPayload(activity.type, activity.payload).success)).toBe(true);
       expect(lessons[0].activities.slice(0, 12).every((activity, index) => activity.payload.imageUrl === gradeEightBoardUrl(unit.slug) && activity.payload.spriteIndex === index)).toBe(true);
-      expect(lessons[1].activities.every((activity, index) => activity.payload.spriteIndex === 21 + index && activity.payload.mode === "AUDIO_GUESS")).toBe(true);
+      expect(lessons[1].activities.every((activity, index) => activity.type === "SENTENCE" && activity.payload.mode === "RESPONSE_RECALL" && activity.payload.imageUrl === gradeEightBoardUrl(unit.slug) && activity.payload.spriteIndex === unit.words.length + index && activity.payload.imageHint)).toBe(true);
+      expect(lessons[1].activities[1].payload.partnerLine).toBe(unit.sentences[0][0]);
     }
   });
 });

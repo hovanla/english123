@@ -1,0 +1,14 @@
+
+> english123@0.1.0 dev
+> next dev --port 3001
+
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://169.254.83.107:3001
+- Environments: .env
+✓ Ready in 10.8s
+
+ GET /learn/tieng-anh-co-ban/appearance 200 in 5.5s (next.js: 4.1s, application-code: 1428ms)
+ GET /learn/tieng-anh-co-ban/basic-two-review-one 200 in 415ms (next.js: 20ms, application-code: 394ms)
+ GET / 200 in 499ms (next.js: 90ms, application-code: 409ms)
+ GET /dashboard 200 in 849ms (next.js: 145ms, application-code: 704ms)

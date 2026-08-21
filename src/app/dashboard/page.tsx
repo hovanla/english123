@@ -21,7 +21,12 @@ export default async function DashboardPage() {
 
   const learner = await getActiveLearner();
   const courses = await prisma.course.findMany({
-    where: { status: "PUBLISHED", ...(learner.gradeId ? { gradeId: learner.gradeId } : {}) },
+    where: {
+      status: "PUBLISHED",
+      ...(learner.gradeId
+        ? { OR: [{ gradeId: learner.gradeId }, { grade: { slug: { in: ["giao-tiep-mat-goc", "tieng-anh-co-ban"] } } }] }
+        : {}),
+    },
     include: {
       grade: true,
       units: {

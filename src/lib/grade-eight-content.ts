@@ -1,4 +1,5 @@
 import { ActivityType } from "@prisma/client";
+import { buildSecondaryReactionActivities } from "./secondary-reaction";
 
 type ActivitySeed = { type: ActivityType; title: string; instruction: string; order: number; payload: Record<string, unknown> };
 export type GradeEightLessonSeed = { slug: string; title: string; description: string; activities: ActivitySeed[] };
@@ -113,13 +114,11 @@ export function buildGradeEightLessons(unit: GradeEightUnitSeed): GradeEightLess
     order: unit.words.length + index + 1,
     payload: { prompt: `Ôn từ vựng chủ đề ${unit.theme}.`, pairs: group.map(([left, right]) => ({ left, right })) },
   });
-  const sentenceActivities: ActivitySeed[] = unit.sentences.map(([target, translation, cue], index) => ({
-    type: ActivityType.FLASHCARD,
-    title: `Mẫu câu ${index + 1}: Nghe và đoán`,
-    instruction: "Nhìn tình huống, bấm nghe và tự đoán câu tiếng Anh trước khi mở đáp án.",
-    order: index + 1,
-    payload: { mode: "AUDIO_GUESS", prompt: cue, scenario: cue, imageUrl: boardUrl, imageAlt: `Tranh tình huống cho câu ${target}`, spriteIndex: 21 + index, ...sharedSprite, audioText: target, front: target, back: translation },
-  }));
+  const sentenceActivities: ActivitySeed[] = buildSecondaryReactionActivities(unit.sentences, {
+    imageUrl: boardUrl,
+    spriteOffset: unit.words.length,
+    ...sharedSprite,
+  });
   return [
     { slug: "tu-vung", title: "Từ vựng qua hình ảnh & âm thanh", description: "Nhìn tranh, nghe và tự đoán từ vựng cốt lõi của chủ đề.", activities: wordActivities },
     { slug: "mau-cau", title: "Mẫu câu phản xạ đời thực", description: "Dùng mẫu câu trong tình huống gần gũi với học sinh Lớp 8.", activities: sentenceActivities },

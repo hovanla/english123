@@ -1,0 +1,4 @@
+⚠ Slow filesystem detected. The benchmark took 241ms. If E:\Projects\english123\.next/dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+[browser] Image with src "/conversation-beginner/boards/first-meeting.svg" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading

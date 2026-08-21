@@ -1,0 +1,46 @@
+
+> english123@0.1.0 dev
+> next dev --port 3001
+
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.1.23:3001
+- Environments: .env
+✓ Ready in 3.8s
+
+○ Compiling / ...
+ GET / 200 in 10.4s (next.js: 9.4s, application-code: 1047ms)
+ GET /learn/giao-tiep-mat-goc/first-meeting 200 in 10.4s (next.js: 9.7s, application-code: 670ms)
+○ Compiling /dashboard ...
+ GET /dashboard 200 in 4.4s (next.js: 3.4s, application-code: 916ms)
+✓ Compiled in 938ms
+ GET /dashboard 200 in 1682ms (next.js: 26ms, application-code: 1656ms)
+ GET /dashboard 200 in 1507ms (next.js: 987ms, application-code: 520ms)
+✓ Compiled in 274ms
+ GET /dashboard 200 in 1757ms (next.js: 46ms, application-code: 1711ms)
+ GET /dashboard 200 in 1516ms (next.js: 1063ms, application-code: 453ms)
+ GET / 200 in 1966ms (next.js: 1459ms, application-code: 507ms)
+ GET /learn/lop-1/hello 200 in 894ms (next.js: 472ms, application-code: 422ms)
+ GET /learn/lop-1/body 200 in 136ms (next.js: 13ms, application-code: 122ms)
+ GET /learn/lop-1/music 200 in 85ms (next.js: 11ms, application-code: 73ms)
+ GET /dashboard 200 in 294ms (next.js: 40ms, application-code: 254ms)
+ GET /review 200 in 1842ms (next.js: 1758ms, application-code: 84ms)
+ GET /dashboard 200 in 173ms (next.js: 5ms, application-code: 168ms)
+ GET /api/review 200 in 2.2s (next.js: 1633ms, application-code: 587ms)
+ GET /api/review 200 in 189ms (next.js: 3ms, application-code: 186ms)
+ GET / 200 in 227ms (next.js: 5ms, application-code: 221ms)
+ GET /learn/giao-tiep-mat-goc/first-meeting 200 in 131ms (next.js: 13ms, application-code: 118ms)
+ POST /api/attempts 200 in 1047ms (next.js: 294ms, application-code: 753ms)
+ GET /learn/giao-tiep-mat-goc/daily-greetings 200 in 384ms (next.js: 13ms, application-code: 371ms)
+✓ Compiled in 267ms
+ GET /learn/giao-tiep-mat-goc/daily-greetings 200 in 831ms (next.js: 105ms, application-code: 725ms)
+ GET /learn/giao-tiep-mat-goc/daily-greetings 200 in 711ms (next.js: 25ms, application-code: 686ms)
+ GET /dashboard 200 in 1642ms (next.js: 475ms, application-code: 1166ms)
+ GET /learn/giao-tiep-mat-goc/daily-greetings 200 in 451ms (next.js: 57ms, application-code: 394ms)
+ GET /learn/giao-tiep-mat-goc/daily-greetings 200 in 487ms (next.js: 20ms, application-code: 467ms)
+ GET /dashboard 200 in 952ms (next.js: 17ms, application-code: 935ms)
+ GET /dashboard 200 in 1025ms (next.js: 10ms, application-code: 1015ms)
+ GET /dashboard 200 in 1001ms (next.js: 56ms, application-code: 945ms)
+ GET /learn/tieng-anh-co-ban/personal-information 200 in 1087ms (next.js: 62ms, application-code: 1025ms)
+ GET /dashboard 200 in 786ms (next.js: 46ms, application-code: 740ms)
+ GET /learn/tieng-anh-co-ban/personal-information 200 in 297ms (next.js: 21ms, application-code: 276ms)

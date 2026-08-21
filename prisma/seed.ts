@@ -1,4 +1,4 @@
-import { ActivityType, ContentStatus, Prisma, Role } from "@prisma/client";
+import { ActivityType, AssetLicense, ContentStatus, Prisma, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 import { buildPreschoolLessons, preschoolImageUrl } from "../src/lib/preschool-content";
@@ -14,6 +14,15 @@ import { buildGradeNineLessons, gradeNineBoardUrl, gradeNineUnits } from "../src
 import { buildGradeTenLessons, gradeTenBoardUrl, gradeTenUnits } from "../src/lib/grade-ten-content";
 import { buildGradeElevenLessons, gradeElevenBoardUrl, gradeElevenUnits } from "../src/lib/grade-eleven-content";
 import { buildGradeTwelveLessons, gradeTwelveBoardUrl, gradeTwelveUnits } from "../src/lib/grade-twelve-content";
+import {
+  beginnerConversationBoardUrl,
+  beginnerConversationUnits,
+  buildBeginnerConversationLessons,
+} from "../src/lib/beginner-conversation-content";
+import { basicEnglishBoardUrl, basicEnglishUnits, buildBasicEnglishLessons } from "../src/lib/basic-english-content";
+import { basicEnglishTwoBoardUrl, basicEnglishTwoUnits, buildBasicEnglishTwoLessons } from "../src/lib/basic-english-two-content";
+import { advancedEnglishBoardUrl, advancedEnglishUnits, buildAdvancedEnglishLessons } from "../src/lib/advanced-english-content";
+import { basicCommunicationBoardUrl, basicCommunicationUnits, buildBasicCommunicationLessons } from "../src/lib/basic-communication-content";
 
 const PUBLISHED = ContentStatus.PUBLISHED;
 const imageUrl = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80";
@@ -32,6 +41,8 @@ const gradeShells = [
   ["lop-10", "Lớp 10", "THPT", "Từ vựng và mẫu câu phản xạ theo 16 chủ đề.", 10],
   ["lop-11", "Lớp 11", "THPT", "Từ vựng và mẫu câu phản xạ theo 16 chủ đề.", 11],
   ["lop-12", "Lớp 12", "THPT", "Từ vựng và mẫu câu phản xạ theo 16 chủ đề.", 12],
+  ["giao-tiep-mat-goc", "Giao tiếp nền tảng", "Người mới bắt đầu", "Học lại từ đầu qua 35 tình huống giao tiếp thực tế.", 13],
+  ["tieng-anh-co-ban", "Tiếng Anh cơ bản", "Người mới bắt đầu", "Từ vựng, mẫu câu và ngữ pháp nền tảng theo từng bước.", 14],
 ] as const;
 
 type UnitSeed = {
@@ -77,6 +88,11 @@ const units: UnitSeed[] = [
   ...gradeTenUnits.map((unit): UnitSeed => ({ grade: "lop-10", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
   ...gradeElevenUnits.map((unit): UnitSeed => ({ grade: "lop-11", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
   ...gradeTwelveUnits.map((unit): UnitSeed => ({ grade: "lop-12", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
+  ...beginnerConversationUnits.map((unit): UnitSeed => ({ grade: "giao-tiep-mat-goc", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
+  ...basicEnglishUnits.map((unit): UnitSeed => ({ grade: "tieng-anh-co-ban", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
+  ...basicEnglishTwoUnits.map((unit): UnitSeed => ({ grade: "tieng-anh-co-ban-2", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
+  ...advancedEnglishUnits.map((unit): UnitSeed => ({ grade: "tieng-anh-nang-cao", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
+  ...basicCommunicationUnits.map((unit): UnitSeed => ({ grade: "giao-tiep-co-ban", slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.description, words: unit.words, sentence: [unit.sentences[0][0], unit.sentences[0][1]], writing: "" })),
 ];
 
 function activitiesFor(unit: UnitSeed) {
@@ -105,6 +121,14 @@ function activitiesFor(unit: UnitSeed) {
 }
 
 async function main() {
+  const isLocalSqlite = process.env.DATABASE_URL?.startsWith("file:");
+  const existingLearnerData = await prisma.learnerProfile.count();
+  if (!isLocalSqlite && existingLearnerData > 0 && process.env.ALLOW_DESTRUCTIVE_SEED !== "true") {
+    throw new Error(
+      "Database đã có hồ sơ học sinh. Seed sẽ xóa tiến độ; chỉ chạy lại khi đã backup và đặt ALLOW_DESTRUCTIVE_SEED=true.",
+    );
+  }
+
   await prisma.productEvent.deleteMany();
   await prisma.reviewSchedule.deleteMany();
   await prisma.lessonProgress.deleteMany();
@@ -131,6 +155,61 @@ async function main() {
     const course = await prisma.course.create({ data: { gradeId: grades.get(slug)!, slug: `tieng-anh-${slug}`, title: `Tiếng Anh Lớp ${number}`, description: `Lộ trình tiếng Anh nền tảng dành cho học sinh Lớp ${number}.`, order: 1, status: PUBLISHED } });
     courses.set(slug, course.id);
   }
+  const beginnerConversationCourse = await prisma.course.create({
+    data: {
+      gradeId: grades.get("giao-tiep-mat-goc")!,
+      slug: "giao-tiep-cho-nguoi-mat-goc",
+      title: "Giao tiếp nền tảng trong 35 ngày",
+      description: "35 chủ đề đời thực, 280 từ khóa và 140 lượt phản xạ nghe–nói dành cho người học lại từ đầu.",
+      order: 1,
+      status: PUBLISHED,
+    },
+  });
+  courses.set("giao-tiep-mat-goc", beginnerConversationCourse.id);
+  const basicCommunicationCourse = await prisma.course.create({
+    data: {
+      gradeId: grades.get("giao-tiep-mat-goc")!,
+      slug: "giao-tiep-co-ban",
+      title: "Giao tiếp cơ bản",
+      description: "23 chủ đề nghe–nói đời thực, hai chặng ôn tập và phản xạ theo hội thoại.",
+      order: 2,
+      status: PUBLISHED,
+    },
+  });
+  courses.set("giao-tiep-co-ban", basicCommunicationCourse.id);
+  const basicEnglishCourse = await prisma.course.create({
+    data: {
+      gradeId: grades.get("tieng-anh-co-ban")!,
+      slug: "tieng-anh-co-ban-1",
+      title: "Tiếng Anh cơ bản 1",
+      description: "14 bài chính, hai chặng ôn tập và một bài kiểm tra cuối khóa với hình ảnh, nghe và phản xạ.",
+      order: 1,
+      status: PUBLISHED,
+    },
+  });
+  courses.set("tieng-anh-co-ban", basicEnglishCourse.id);
+  const basicEnglishTwoCourse = await prisma.course.create({
+    data: {
+      gradeId: grades.get("tieng-anh-co-ban")!,
+      slug: "tieng-anh-co-ban-2",
+      title: "Tiếng Anh cơ bản 2",
+      description: "12 chủ đề mở rộng, ba chặng ôn tập và phản xạ theo tình huống thực tế.",
+      order: 2,
+      status: PUBLISHED,
+    },
+  });
+  courses.set("tieng-anh-co-ban-2", basicEnglishTwoCourse.id);
+  const advancedEnglishCourse = await prisma.course.create({
+    data: {
+      gradeId: grades.get("tieng-anh-co-ban")!,
+      slug: "tieng-anh-nang-cao",
+      title: "Tiếng Anh nâng cao",
+      description: "12 chủ đề nâng cao, ba chặng ôn tập và phản xạ lập luận trong tình huống thực tế.",
+      order: 3,
+      status: PUBLISHED,
+    },
+  });
+  courses.set("tieng-anh-nang-cao", advancedEnglishCourse.id);
 
   const orderByGrade = new Map<string, number>();
   for (const unit of units) {
@@ -148,11 +227,42 @@ async function main() {
     const gradeTenSeed = unit.grade === "lop-10" ? gradeTenUnits.find((item) => item.slug === unit.slug) : undefined;
     const gradeElevenSeed = unit.grade === "lop-11" ? gradeElevenUnits.find((item) => item.slug === unit.slug) : undefined;
     const gradeTwelveSeed = unit.grade === "lop-12" ? gradeTwelveUnits.find((item) => item.slug === unit.slug) : undefined;
-    const lessons = unit.grade === "mam-non" ? buildPreschoolLessons(unit) : gradeOneSeed ? buildGradeOneLessons(gradeOneSeed) : gradeTwoSeed ? buildGradeTwoLessons(gradeTwoSeed) : gradeThreeSeed ? buildGradeThreeLessons(gradeThreeSeed) : gradeFourSeed ? buildGradeFourLessons(gradeFourSeed) : gradeFiveSeed ? buildGradeFiveLessons(gradeFiveSeed) : gradeSixSeed ? buildGradeSixLessons(gradeSixSeed) : gradeSevenSeed ? buildGradeSevenLessons(gradeSevenSeed) : gradeEightSeed ? buildGradeEightLessons(gradeEightSeed) : gradeNineSeed ? buildGradeNineLessons(gradeNineSeed) : gradeTenSeed ? buildGradeTenLessons(gradeTenSeed) : gradeElevenSeed ? buildGradeElevenLessons(gradeElevenSeed) : gradeTwelveSeed ? buildGradeTwelveLessons(gradeTwelveSeed) : activitiesFor(unit);
+    const beginnerConversationSeed = unit.grade === "giao-tiep-mat-goc" ? beginnerConversationUnits.find((item) => item.slug === unit.slug) : undefined;
+    const basicEnglishSeed = unit.grade === "tieng-anh-co-ban" ? basicEnglishUnits.find((item) => item.slug === unit.slug) : undefined;
+    const basicEnglishTwoSeed = unit.grade === "tieng-anh-co-ban-2" ? basicEnglishTwoUnits.find((item) => item.slug === unit.slug) : undefined;
+    const advancedEnglishSeed = unit.grade === "tieng-anh-nang-cao" ? advancedEnglishUnits.find((item) => item.slug === unit.slug) : undefined;
+    const basicCommunicationSeed = unit.grade === "giao-tiep-co-ban" ? basicCommunicationUnits.find((item) => item.slug === unit.slug) : undefined;
+    const lessons = unit.grade === "mam-non" ? buildPreschoolLessons(unit) : gradeOneSeed ? buildGradeOneLessons(gradeOneSeed) : gradeTwoSeed ? buildGradeTwoLessons(gradeTwoSeed) : gradeThreeSeed ? buildGradeThreeLessons(gradeThreeSeed) : gradeFourSeed ? buildGradeFourLessons(gradeFourSeed) : gradeFiveSeed ? buildGradeFiveLessons(gradeFiveSeed) : gradeSixSeed ? buildGradeSixLessons(gradeSixSeed) : gradeSevenSeed ? buildGradeSevenLessons(gradeSevenSeed) : gradeEightSeed ? buildGradeEightLessons(gradeEightSeed) : gradeNineSeed ? buildGradeNineLessons(gradeNineSeed) : gradeTenSeed ? buildGradeTenLessons(gradeTenSeed) : gradeElevenSeed ? buildGradeElevenLessons(gradeElevenSeed) : gradeTwelveSeed ? buildGradeTwelveLessons(gradeTwelveSeed) : beginnerConversationSeed ? buildBeginnerConversationLessons(beginnerConversationSeed) : basicEnglishSeed ? buildBasicEnglishLessons(basicEnglishSeed) : basicEnglishTwoSeed ? buildBasicEnglishTwoLessons(basicEnglishTwoSeed) : advancedEnglishSeed ? buildAdvancedEnglishLessons(advancedEnglishSeed) : basicCommunicationSeed ? buildBasicCommunicationLessons(basicCommunicationSeed) : activitiesFor(unit);
+    if (beginnerConversationSeed || basicEnglishSeed || basicEnglishTwoSeed || advancedEnglishSeed || basicCommunicationSeed) {
+      const boardUrl = beginnerConversationSeed ? beginnerConversationBoardUrl(unit.slug) : basicCommunicationSeed ? basicCommunicationBoardUrl(unit.slug) : basicEnglishSeed ? basicEnglishBoardUrl(unit.slug) : basicEnglishTwoSeed ? basicEnglishTwoBoardUrl(unit.slug) : advancedEnglishBoardUrl(unit.slug);
+      const boardContentType = boardUrl.endsWith(".png") ? "image/png" : "image/svg+xml";
+      const isBasicEnglish = Boolean(basicEnglishSeed || basicEnglishTwoSeed || advancedEnglishSeed || basicCommunicationSeed);
+      await prisma.asset.upsert({
+        where: { url: boardUrl },
+        create: {
+          url: boardUrl,
+          pathname: boardUrl.replace(/^\//, ""),
+          contentType: boardContentType,
+          altText: `${basicCommunicationSeed ? "Bộ tranh giao tiếp cơ bản" : advancedEnglishSeed ? "Bộ tranh tiếng Anh nâng cao" : basicEnglishTwoSeed ? "Bộ tranh tiếng Anh cơ bản 2" : isBasicEnglish ? "Bộ tranh tiếng Anh cơ bản" : "Bộ tranh giao tiếp"} chủ đề ${unit.theme}`,
+          source: "English123 · minh họa SVG tự biên soạn",
+          license: AssetLicense.OWNED,
+          width: isBasicEnglish ? 1500 : 1400,
+          height: isBasicEnglish ? 900 : 1050,
+        },
+        update: {
+          pathname: boardUrl.replace(/^\//, ""),
+          altText: `${basicCommunicationSeed ? "Bộ tranh giao tiếp cơ bản" : advancedEnglishSeed ? "Bộ tranh tiếng Anh nâng cao" : basicEnglishTwoSeed ? "Bộ tranh tiếng Anh cơ bản 2" : isBasicEnglish ? "Bộ tranh tiếng Anh cơ bản" : "Bộ tranh giao tiếp"} chủ đề ${unit.theme}`,
+          source: "English123 · minh họa SVG tự biên soạn",
+          license: AssetLicense.OWNED,
+          width: isBasicEnglish ? 1500 : 1400,
+          height: isBasicEnglish ? 900 : 1050,
+        },
+      });
+    }
     await prisma.unit.create({
       data: {
-        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.grade === "mam-non" ? `Học từ vựng và mẫu câu về ${unit.theme.toLowerCase()} qua hình ảnh, âm thanh và tình huống đời thực.` : unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : gradeOneSeed ? gradeOneBoardUrl(unit.slug) : gradeTwoSeed ? gradeTwoBoardUrl(unit.slug) : gradeThreeSeed ? gradeThreeBoardUrl(unit.slug) : gradeFourSeed ? gradeFourBoardUrl(unit.slug) : gradeFiveSeed ? gradeFiveBoardUrl(unit.slug) : gradeSixSeed ? gradeSixBoardUrl(unit.slug) : gradeSevenSeed ? gradeSevenBoardUrl(unit.slug) : gradeEightSeed ? gradeEightBoardUrl(unit.slug) : gradeNineSeed ? gradeNineBoardUrl(unit.slug) : gradeTenSeed ? gradeTenBoardUrl(unit.slug) : gradeElevenSeed ? gradeElevenBoardUrl(unit.slug) : gradeTwelveSeed ? gradeTwelveBoardUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
-        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? (lessonIndex === 0 ? 9 : 7) : gradeOneSeed ? (lessonIndex === 0 ? 6 : 5) : gradeTwoSeed ? (lessonIndex === 0 ? 7 : 5) : gradeThreeSeed ? (lessonIndex === 0 ? 9 : 5) : gradeFourSeed ? (lessonIndex === 0 ? 10 : 5) : gradeFiveSeed ? (lessonIndex === 0 ? 11 : 5) : gradeSixSeed || gradeSevenSeed || gradeEightSeed || gradeNineSeed || gradeTenSeed || gradeElevenSeed || gradeTwelveSeed ? (lessonIndex === 0 ? 10 : 5) : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
+        courseId: courses.get(unit.grade)!, slug: unit.slug, title: unit.title, theme: unit.theme, description: unit.grade === "mam-non" ? `Học từ vựng và mẫu câu về ${unit.theme.toLowerCase()} qua hình ảnh, âm thanh và tình huống đời thực.` : unit.description, imageUrl: unit.grade === "mam-non" ? preschoolImageUrl(unit.slug) : gradeOneSeed ? gradeOneBoardUrl(unit.slug) : gradeTwoSeed ? gradeTwoBoardUrl(unit.slug) : gradeThreeSeed ? gradeThreeBoardUrl(unit.slug) : gradeFourSeed ? gradeFourBoardUrl(unit.slug) : gradeFiveSeed ? gradeFiveBoardUrl(unit.slug) : gradeSixSeed ? gradeSixBoardUrl(unit.slug) : gradeSevenSeed ? gradeSevenBoardUrl(unit.slug) : gradeEightSeed ? gradeEightBoardUrl(unit.slug) : gradeNineSeed ? gradeNineBoardUrl(unit.slug) : gradeTenSeed ? gradeTenBoardUrl(unit.slug) : gradeElevenSeed ? gradeElevenBoardUrl(unit.slug) : gradeTwelveSeed ? gradeTwelveBoardUrl(unit.slug) : beginnerConversationSeed ? beginnerConversationBoardUrl(unit.slug) : basicCommunicationSeed ? basicCommunicationBoardUrl(unit.slug) : basicEnglishSeed ? basicEnglishBoardUrl(unit.slug) : basicEnglishTwoSeed ? basicEnglishTwoBoardUrl(unit.slug) : advancedEnglishSeed ? advancedEnglishBoardUrl(unit.slug) : imageUrl, order, status: PUBLISHED,
+        lessons: { create: lessons.map((lesson, lessonIndex) => ({ slug: lesson.slug, title: lesson.title, description: lesson.description, order: lessonIndex + 1, status: PUBLISHED, estimatedMinutes: unit.grade === "mam-non" ? (lessonIndex === 0 ? 9 : 7) : beginnerConversationSeed ? (lessonIndex === 0 ? 8 : 6) : basicCommunicationSeed ? (lessonIndex === 0 ? 9 : lessonIndex === 1 ? 7 : 3) : basicEnglishSeed || basicEnglishTwoSeed ? (lessonIndex === 0 ? 10 : lessonIndex === 1 ? 6 : 3) : advancedEnglishSeed ? (lessonIndex === 0 ? 10 : lessonIndex === 1 ? 7 : 4) : gradeOneSeed ? (lessonIndex === 0 ? 6 : 5) : gradeTwoSeed ? (lessonIndex === 0 ? 7 : 5) : gradeThreeSeed ? (lessonIndex === 0 ? 9 : 5) : gradeFourSeed ? (lessonIndex === 0 ? 10 : 5) : gradeFiveSeed ? (lessonIndex === 0 ? 11 : 5) : gradeSixSeed || gradeSevenSeed || gradeEightSeed || gradeNineSeed || gradeTenSeed || gradeElevenSeed || gradeTwelveSeed ? (lessonIndex === 0 ? 10 : 5) : lessonIndex === 2 ? 10 : 7, activities: { create: lesson.activities.map((activity) => ({ ...activity, payload: activity.payload as Prisma.InputJsonValue, status: PUBLISHED })) } })) },
       },
     });
   }
@@ -164,7 +274,7 @@ async function main() {
       update: { role: Role.ADMIN, passwordHash: await bcrypt.hash(process.env.BOOTSTRAP_ADMIN_PASSWORD, 12) },
     });
   }
-  console.log(`Đã tạo ${gradeShells.length} cấp lớp, 13 khóa học và ${units.length} unit (20 unit Mầm non, 20 unit Lớp 1–5, 16 unit Lớp 6–8, 10 unit Lớp 9 và 48 unit Lớp 10–12).`);
+  console.log(`Đã tạo ${gradeShells.length} lộ trình, 18 khóa học và ${units.length} unit, gồm năm khóa cho người học trưởng thành.`);
 }
 
 main().finally(() => prisma.$disconnect());

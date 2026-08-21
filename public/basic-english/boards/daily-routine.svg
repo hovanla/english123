@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-label="Bộ tranh học tiếng Anh cơ bản">
+    <rect width="1500" height="900" fill="#ffffff"/>
+    
+      <g transform="translate(0 0)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#e6f7f0"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#047857" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#047857" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#047857" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">⏰</text>
+      </g>
+      <g transform="translate(300 0)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#e8f2ff"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#1d4ed8" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#1d4ed8" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#1d4ed8" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">👕</text>
+      </g>
+      <g transform="translate(600 0)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#fff1d6"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#b45309" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#b45309" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#b45309" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🥣</text>
+      </g>
+      <g transform="translate(900 0)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#f4e8ff"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#7e22ce" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#7e22ce" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#7e22ce" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🏢</text>
+      </g>
+      <g transform="translate(1200 0)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#ffe8ed"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#be123c" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#be123c" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#be123c" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">▶️</text>
+      </g>
+      <g transform="translate(0 300)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#e6f7f0"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#047857" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#047857" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#047857" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">⏹️</text>
+      </g>
+      <g transform="translate(300 300)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#e8f2ff"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#1d4ed8" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#1d4ed8" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#1d4ed8" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🍱</text>
+      </g>
+      <g transform="translate(600 300)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#fff1d6"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#b45309" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#b45309" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#b45309" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🏠</text>
+      </g>
+      <g transform="translate(900 300)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#f4e8ff"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#7e22ce" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#7e22ce" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#7e22ce" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🍳</text>
+      </g>
+      <g transform="translate(1200 300)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#ffe8ed"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#be123c" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#be123c" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#be123c" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🛌</text>
+      </g>
+      <g transform="translate(0 600)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#e6f7f0"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#047857" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#047857" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#047857" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🕕🙂</text>
+      </g>
+      <g transform="translate(300 600)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#e8f2ff"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#1d4ed8" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#1d4ed8" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#1d4ed8" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🏢⏰❓</text>
+      </g>
+      <g transform="translate(600 600)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#fff1d6"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#b45309" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#b45309" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#b45309" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🕗➡️🕔</text>
+      </g>
+      <g transform="translate(900 600)">
+        <rect x="10" y="10" width="280" height="280" rx="32" fill="#f4e8ff"/>
+        <path d="M34 228 C90 178, 142 270, 266 202" fill="none" stroke="#7e22ce" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+        <circle cx="48" cy="48" r="20" fill="#7e22ce" opacity=".14"/>
+        <circle cx="250" cy="246" r="30" fill="#7e22ce" opacity=".09"/>
+        <text x="150" y="176" text-anchor="middle" font-size="104" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">👨🍳</text>
+      </g>
+  </svg>

@@ -21,7 +21,8 @@ describe("grade six curriculum", () => {
       expect(unit.words.length + 4).toBeLessThanOrEqual(25);
       expect(lessons.flatMap((lesson) => lesson.activities).every((activity) => validateActivityPayload(activity.type, activity.payload).success)).toBe(true);
       expect(lessons[0].activities.slice(0, unit.words.length).every((activity, index) => activity.payload.imageUrl === gradeSixBoardUrl(unit.slug) && activity.payload.spriteIndex === index && activity.payload.spriteColumns === 5 && activity.payload.spriteRows === 5)).toBe(true);
-      expect(lessons[1].activities.every((activity, index) => activity.payload.imageUrl === gradeSixBoardUrl(unit.slug) && activity.payload.spriteIndex === unit.words.length + index && activity.payload.mode === "AUDIO_GUESS")).toBe(true);
+      expect(lessons[1].activities.every((activity, index) => activity.type === "SENTENCE" && activity.payload.mode === "RESPONSE_RECALL" && activity.payload.imageUrl === gradeSixBoardUrl(unit.slug) && activity.payload.spriteIndex === unit.words.length + index && activity.payload.imageHint)).toBe(true);
+      expect(lessons[1].activities[1].payload.partnerLine).toBe(unit.sentences[0][0]);
     }
   });
 });

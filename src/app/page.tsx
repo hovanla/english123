@@ -8,6 +8,7 @@ const groups = [
   { title: "Khởi đầu", subtitle: "Mầm non · 20 unit cho trẻ 3–6 tuổi", slugs: ["mam-non"], color: "bg-orange-50 border-orange-200" },
   { title: "Tiểu học", subtitle: "Lớp 1–5 · Pilot đang mở", slugs: ["lop-1", "lop-2", "lop-3", "lop-4", "lop-5"], color: "bg-emerald-50 border-emerald-200" },
   { title: "Trung học", subtitle: "Lớp 6–12", slugs: ["lop-6", "lop-7", "lop-8", "lop-9", "lop-10", "lop-11", "lop-12"], color: "bg-sky-50 border-sky-200" },
+  { title: "Người lớn", subtitle: "Giao tiếp 35 ngày · Giao tiếp cơ bản · Cơ bản 1–2 · Nâng cao", slugs: ["giao-tiep-mat-goc", "tieng-anh-co-ban"], color: "bg-violet-50 border-violet-200" },
 ];
 
 export default async function Home() {
@@ -44,14 +45,15 @@ export default async function Home() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-        <div className="mb-6"><p className="text-sm font-bold uppercase tracking-[.16em] text-emerald-700">Chương trình K–12</p><h2 className="mt-2 text-3xl font-black">Chọn cấp học phù hợp</h2></div>
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="mb-6"><p className="text-sm font-bold uppercase tracking-[.16em] text-emerald-700">Chương trình học</p><h2 className="mt-2 text-3xl font-black">Chọn lộ trình phù hợp</h2></div>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {groups.map((group) => <article key={group.title} className={`rounded-3xl border p-5 ${group.color}`}>
             <h3 className="text-xl font-black">{group.title}</h3><p className="mt-1 text-sm text-slate-600">{group.subtitle}</p>
             <div className="mt-5 space-y-2">
-              {grades.filter((grade) => group.slugs.includes(grade.slug)).map((grade) => {
-                const unit = grade.courses[0]?.units[0];
-                return <div key={grade.id} className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm"><div><p className="font-bold">{grade.name}</p><p className="text-xs text-slate-500">{grade.courses.flatMap((course) => course.units).length} unit</p></div>{unit ? <Link href={`/learn/${grade.slug}/${unit.slug}`} className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-bold text-white">Học</Link> : <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">Sắp có</span>}</div>;
+              {grades.filter((grade) => group.slugs.includes(grade.slug)).flatMap((grade) => grade.courses.map((course) => ({ grade, course }))).map(({ grade, course }) => {
+                const unit = course.units[0];
+                const label = grade.courses.length > 1 ? course.title : grade.name;
+                return <div key={course.id} className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm"><div><p className="font-bold">{label}</p><p className="text-xs text-slate-500">{course.units.length} unit</p></div>{unit ? <Link href={`/learn/${grade.slug}/${unit.slug}`} className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-bold text-white">Học</Link> : <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">Sắp có</span>}</div>;
               })}
             </div>
           </article>)}

@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1050" viewBox="0 0 1400 1050" role="img" aria-label="Bộ tranh tình huống giao tiếp">
+    <rect width="1400" height="1050" fill="#ffffff"/>
+    
+      <g transform="translate(0 0)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#dff7ef"/>
+        <circle cx="60" cy="58" r="22" fill="#087a5b" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#087a5b" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#087a5b" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🎂</text>
+      </g>
+      <g transform="translate(350 0)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#e8f1ff"/>
+        <circle cx="60" cy="58" r="22" fill="#2563a8" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#2563a8" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#2563a8" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🔢</text>
+      </g>
+      <g transform="translate(700 0)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#fff2d6"/>
+        <circle cx="60" cy="58" r="22" fill="#b45309" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#b45309" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#b45309" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🌱</text>
+      </g>
+      <g transform="translate(1050 0)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#f4e8ff"/>
+        <circle cx="60" cy="58" r="22" fill="#7e22ce" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#7e22ce" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#7e22ce" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🙂</text>
+      </g>
+      <g transform="translate(0 350)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#ffe8ec"/>
+        <circle cx="60" cy="58" r="22" fill="#be3654" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#be3654" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#be3654" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">💍</text>
+      </g>
+      <g transform="translate(350 350)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#e7f8ff"/>
+        <circle cx="60" cy="58" r="22" fill="#08789b" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#08789b" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#08789b" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🔒</text>
+      </g>
+      <g transform="translate(700 350)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#dff7ef"/>
+        <circle cx="60" cy="58" r="22" fill="#087a5b" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#087a5b" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#087a5b" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">😌</text>
+      </g>
+      <g transform="translate(1050 350)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#e8f1ff"/>
+        <circle cx="60" cy="58" r="22" fill="#2563a8" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#2563a8" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#2563a8" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">💬</text>
+      </g>
+      <g transform="translate(0 700)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#fff2d6"/>
+        <circle cx="60" cy="58" r="22" fill="#b45309" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#b45309" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#b45309" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🎂❓</text>
+      </g>
+      <g transform="translate(350 700)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#f4e8ff"/>
+        <circle cx="60" cy="58" r="22" fill="#7e22ce" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#7e22ce" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#7e22ce" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">2️⃣5️⃣</text>
+      </g>
+      <g transform="translate(700 700)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#ffe8ec"/>
+        <circle cx="60" cy="58" r="22" fill="#be3654" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#be3654" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#be3654" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🤝❓</text>
+      </g>
+      <g transform="translate(1050 700)">
+        <rect x="12" y="12" width="326" height="326" rx="34" fill="#e7f8ff"/>
+        <circle cx="60" cy="58" r="22" fill="#08789b" opacity=".16"/>
+        <circle cx="292" cy="294" r="38" fill="#08789b" opacity=".1"/>
+        <path d="M42 292 C110 230, 178 340, 308 268" fill="none" stroke="#08789b" stroke-width="8" stroke-linecap="round" opacity=".16"/>
+        <text x="175" y="209" text-anchor="middle" font-size="118" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">🔒🙂</text>
+      </g>
+  </svg>

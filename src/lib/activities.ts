@@ -10,12 +10,13 @@ const basePrompt = {
   visual: z.string().optional(),
   imageUrl: z.string().min(1).optional(),
   imageAlt: z.string().optional(),
+  imageHint: z.string().min(1).optional(),
   spriteIndex: z.number().int().min(0).max(24).optional(),
   spriteColumns: z.number().int().min(1).max(5).optional(),
   spriteRows: z.number().int().min(1).max(5).optional(),
   audioUrl: z.string().min(1).optional(),
   audioText: z.string().min(1).optional(),
-  mode: z.enum(["VISUAL_GUESS", "AUDIO_GUESS", "STANDARD"]).optional(),
+  mode: z.enum(["VISUAL_GUESS", "AUDIO_GUESS", "RESPONSE_RECALL", "STANDARD"]).optional(),
 };
 
 export const activityPayloadSchemas = {
@@ -25,7 +26,14 @@ export const activityPayloadSchemas = {
   LISTEN_CHOOSE: z.object({ ...basePrompt, text: z.string().min(1), options: z.array(optionSchema).min(2).max(6), correctOptionId: z.string().min(1) }),
   LISTEN_TYPE: z.object({ ...basePrompt, text: z.string().min(1), acceptedAnswers: z.array(z.string().min(1)).min(1) }),
   SPEAK_REPEAT: z.object({ ...basePrompt, target: z.string().min(1), translation: z.string().optional() }),
-  SENTENCE: z.object({ ...basePrompt, target: z.string().min(1), acceptedAnswers: z.array(z.string().min(1)).min(1), usage: z.string().optional() }),
+  SENTENCE: z.object({
+    ...basePrompt,
+    target: z.string().min(1),
+    translation: z.string().optional(),
+    partnerLine: z.string().min(1).optional(),
+    acceptedAnswers: z.array(z.string().min(1)).min(1),
+    usage: z.string().optional(),
+  }),
   SHORT_WRITING: z.object({ ...basePrompt, minWords: z.number().int().min(1).max(200), keywords: z.array(z.string().min(1)).max(20) }),
 } satisfies Record<ActivityType, z.ZodType>;
 
