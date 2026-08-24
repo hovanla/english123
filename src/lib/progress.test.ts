@@ -10,6 +10,7 @@ describe("spaced repetition schedule", () => {
     expect(addMinutes(now, 10).toISOString()).toBe("2026-07-17T00:10:00.000Z");
     expect(scheduleAfterAttempt(now, false).dueAt.toISOString()).toBe("2026-07-17T00:10:00.000Z");
     expect(scheduleAfterReview(now, false, 2).dueAt.toISOString()).toBe("2026-07-17T00:10:00.000Z");
+    expect(scheduleAfterReview(now, true, 0, false).dueAt.toISOString()).toBe("2026-07-18T00:00:00.000Z");
   });
   it("moves a remembered item through the spaced schedule", () => {
     const now = new Date("2026-07-17T00:00:00Z");

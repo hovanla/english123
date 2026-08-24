@@ -34,7 +34,7 @@ export async function PUT(request: Request) {
   if (!item) return NextResponse.json({ error: "REVIEW_NOT_FOUND" }, { status: 404 });
   if (!validateActivityAnswer(item.activity.type, parsed.data.answer).success) return NextResponse.json({ error: "INVALID_ANSWER" }, { status: 400 });
   const result = scoreActivity(item.activity.type, item.activity.payload, parsed.data.answer);
-  const nextSchedule = scheduleAfterReview(new Date(), result.passed, item.intervalIndex);
+  const nextSchedule = scheduleAfterReview(new Date(), result.passed, item.intervalIndex, (item.lastScore ?? 0) >= 70);
   const [, updated] = await prisma.$transaction([
     prisma.activityAttempt.create({ data: { learnerProfileId: learner.id, activityId: item.activityId, answer: parsed.data.answer as object, score: result.score, passed: result.passed } }),
     prisma.reviewSchedule.update({ where: { id: item.id }, data: { ...nextSchedule, completedCount: { increment: 1 }, lastScore: result.score } }),

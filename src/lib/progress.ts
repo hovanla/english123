@@ -20,9 +20,9 @@ export function scheduleAfterAttempt(now: Date, passed: boolean) {
   };
 }
 
-export function scheduleAfterReview(now: Date, passed: boolean, currentIndex: number) {
+export function scheduleAfterReview(now: Date, passed: boolean, currentIndex: number, previousPassed = true) {
   if (!passed) return { intervalIndex: 0, dueAt: addMinutes(now, FORGOTTEN_RETRY_MINUTES) };
-  const intervalIndex = Math.min(currentIndex + 1, REVIEW_INTERVALS.length - 1);
+  const intervalIndex = previousPassed ? Math.min(currentIndex + 1, REVIEW_INTERVALS.length - 1) : 0;
   return { intervalIndex, dueAt: addDays(now, REVIEW_INTERVALS[intervalIndex]) };
 }
 
