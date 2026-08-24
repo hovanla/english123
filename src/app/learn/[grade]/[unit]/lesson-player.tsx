@@ -25,12 +25,13 @@ function LessonImage({ src, alt, spriteIndex, spriteColumns = 3, spriteRows = 2,
   </div>;
 }
 
-export default function LessonPlayer({ lessons, completionHref, completionLabel }: { lessons: Lesson[]; completionHref: string; completionLabel: string }) {
+export default function LessonPlayer({ lessons, completionHref, completionLabel, initialActivityIndex = 0, hasSavedProgress = false }: { lessons: Lesson[]; completionHref: string; completionLabel: string; initialActivityIndex?: number; hasSavedProgress?: boolean }) {
   const activities = useMemo(() => lessons.flatMap((lesson, lessonIndex) => lesson.activities.map((activity) => ({ ...activity, lessonTitle: lesson.title, lessonIndex }))), [lessons]);
   const lessonStarts = useMemo(() => lessons.map((_, lessonIndex) => activities.findIndex((activity) => activity.lessonIndex === lessonIndex)), [activities, lessons]);
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => Math.max(0, Math.min(initialActivityIndex, Math.max(activities.length - 1, 0))));
   const [answer, setAnswer] = useState<Record<string, unknown>>({});
-  const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [result, setResult] = useState<{ score: number; passed: boolean; reviewDueAt?: string } | null>(null);
+  const [saveMessage, setSaveMessage] = useState(hasSavedProgress ? `Đã mở lại đúng bước ${initialActivityIndex + 1}/${activities.length}. Tiến độ được lưu tự động.` : "");
   const [pending, setPending] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [hintVisible, setHintVisible] = useState(false);
@@ -92,7 +93,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel 
     });
     const data = await response.json();
     setPending(false);
-    if (response.ok) setResult({ score: data.score, passed: data.passed });
+    if (response.ok) setResult({ score: data.score, passed: data.passed, reviewDueAt: data.reviewDueAt });
   }
 
   async function rateFlashcardAndAdvance(known: boolean) {
@@ -105,8 +106,9 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel 
     const data = await response.json();
     setPending(false);
     if (!response.ok) return;
+    setSaveMessage(known ? "Đã lưu: mục này sẽ được ôn lại sau 1 ngày." : "Đã lưu ‘Chưa nhớ’: mục này sẽ quay lại sau 10 phút.");
     if (index < activities.length - 1) resetActivity(index + 1);
-    else setResult({ score: data.score, passed: data.passed });
+    else setResult({ score: data.score, passed: data.passed, reviewDueAt: data.reviewDueAt });
   }
 
   function startSpeech(target: string, answerKey: "text" | "transcript" = "transcript") {
@@ -139,6 +141,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel 
     </aside>
 
     <article className="order-1 overflow-hidden rounded-2xl bg-white shadow-sm lg:order-none">
+      {saveMessage && <div aria-live="polite" className="border-b border-sky-100 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-950 sm:px-5">{saveMessage}</div>}
       <div className="border-b border-slate-100 p-4 sm:p-5">
         <p className="text-xs font-black uppercase tracking-wider text-emerald-700">{activity.lessonTitle} · {index + 1}/{activities.length}</p>
         <h2 className="mt-2 text-xl font-black sm:text-2xl">{activity.title}</h2>
@@ -288,6 +291,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel 
 
         {result ? <div aria-live="polite" className={`mt-4 rounded-2xl p-4 ${result.passed ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-950"}`}>
           <p className="text-lg font-black">{result.passed ? `Chính xác! ${result.score} điểm` : `Chưa đúng rồi. Mình xem đáp án và thử lại nhé.`}</p>
+          {result.reviewDueAt && <p className="mt-2 text-sm font-bold">{result.passed ? "Mục này sẽ được ôn lại sau 1 ngày." : "Đã lưu vào lịch: em sẽ được nhắc học lại sau 10 phút."}</p>}
           {Boolean(payload.explanation) && <p className="mt-3 font-bold">Đáp án: {String(payload.explanation)}</p>}
           {Boolean(payload.modelAnswer) && <p className="mt-2 text-sm leading-6">{String(payload.modelAnswer)}</p>}
           {isResponseRecall && <button type="button" onClick={() => speakEnglish(String(payload.target || ""))} className="mt-3 rounded-xl bg-sky-100 px-4 py-2.5 font-black text-sky-900">🔊 Nghe cụm đúng</button>}

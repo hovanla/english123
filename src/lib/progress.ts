@@ -1,11 +1,29 @@
 import { prisma } from "@/lib/prisma";
 
 export const REVIEW_INTERVALS = [1, 3, 7, 14] as const;
+export const FORGOTTEN_RETRY_MINUTES = 10;
 
 export function addDays(date: Date, days: number) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
   return next;
+}
+
+export function addMinutes(date: Date, minutes: number) {
+  return new Date(date.getTime() + minutes * 60_000);
+}
+
+export function scheduleAfterAttempt(now: Date, passed: boolean) {
+  return {
+    intervalIndex: 0,
+    dueAt: passed ? addDays(now, REVIEW_INTERVALS[0]) : addMinutes(now, FORGOTTEN_RETRY_MINUTES),
+  };
+}
+
+export function scheduleAfterReview(now: Date, passed: boolean, currentIndex: number) {
+  if (!passed) return { intervalIndex: 0, dueAt: addMinutes(now, FORGOTTEN_RETRY_MINUTES) };
+  const intervalIndex = Math.min(currentIndex + 1, REVIEW_INTERVALS.length - 1);
+  return { intervalIndex, dueAt: addDays(now, REVIEW_INTERVALS[intervalIndex]) };
 }
 
 export async function refreshLessonProgress(learnerProfileId: string, lessonId: string) {

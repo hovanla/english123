@@ -3,17 +3,27 @@ import { z } from "zod";
 import { scoreActivity, validateActivityAnswer } from "@/lib/activities";
 import { getActiveLearner } from "@/lib/learner";
 import { prisma } from "@/lib/prisma";
-import { addDays, REVIEW_INTERVALS } from "@/lib/progress";
+import { refreshLessonProgress, scheduleAfterReview } from "@/lib/progress";
 
 export async function GET() {
   const learner = await getActiveLearner();
-  const items = await prisma.reviewSchedule.findMany({
-    where: { learnerProfileId: learner.id, dueAt: { lte: new Date() } },
-    include: { activity: { select: { id: true, type: true, title: true, instruction: true, payload: true } } },
-    orderBy: { dueAt: "asc" },
-  });
+  const now = new Date();
+  const activitySelect = { id: true, type: true, title: true, instruction: true, payload: true } as const;
+  const [items, upcoming] = await Promise.all([
+    prisma.reviewSchedule.findMany({
+      where: { learnerProfileId: learner.id, dueAt: { lte: now } },
+      include: { activity: { select: activitySelect } },
+      orderBy: { dueAt: "asc" },
+    }),
+    prisma.reviewSchedule.findMany({
+      where: { learnerProfileId: learner.id, dueAt: { gt: now } },
+      include: { activity: { select: activitySelect } },
+      orderBy: { dueAt: "asc" },
+      take: 3,
+    }),
+  ]);
   await prisma.productEvent.create({ data: { learnerProfileId: learner.id, name: "review_opened" } });
-  return NextResponse.json({ items });
+  return NextResponse.json({ items, upcoming });
 }
 
 export async function PUT(request: Request) {
@@ -24,8 +34,12 @@ export async function PUT(request: Request) {
   if (!item) return NextResponse.json({ error: "REVIEW_NOT_FOUND" }, { status: 404 });
   if (!validateActivityAnswer(item.activity.type, parsed.data.answer).success) return NextResponse.json({ error: "INVALID_ANSWER" }, { status: 400 });
   const result = scoreActivity(item.activity.type, item.activity.payload, parsed.data.answer);
-  const nextIndex = result.passed ? Math.min(item.intervalIndex + 1, REVIEW_INTERVALS.length - 1) : 0;
-  const updated = await prisma.reviewSchedule.update({ where: { id: item.id }, data: { intervalIndex: nextIndex, completedCount: { increment: 1 }, lastScore: result.score, dueAt: addDays(new Date(), REVIEW_INTERVALS[nextIndex]) } });
+  const nextSchedule = scheduleAfterReview(new Date(), result.passed, item.intervalIndex);
+  const [, updated] = await prisma.$transaction([
+    prisma.activityAttempt.create({ data: { learnerProfileId: learner.id, activityId: item.activityId, answer: parsed.data.answer as object, score: result.score, passed: result.passed } }),
+    prisma.reviewSchedule.update({ where: { id: item.id }, data: { ...nextSchedule, completedCount: { increment: 1 }, lastScore: result.score } }),
+  ]);
+  const progress = await refreshLessonProgress(learner.id, item.activity.lessonId);
   await prisma.productEvent.create({ data: { learnerProfileId: learner.id, name: "review_completed", entityType: "Activity", entityId: item.activityId, metadata: { score: result.score, passed: result.passed } } });
-  return NextResponse.json({ item: updated, ...result });
+  return NextResponse.json({ item: updated, ...result, progress, reviewDueAt: nextSchedule.dueAt });
 }

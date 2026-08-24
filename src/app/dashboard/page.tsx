@@ -44,23 +44,35 @@ export default async function DashboardPage() {
     orderBy: [{ grade: { order: "asc" } }, { order: "asc" }],
   });
 
-  const dueReviews = await prisma.reviewSchedule.count({ where: { learnerProfileId: learner.id, dueAt: { lte: new Date() } } });
-  const recent = await prisma.lessonProgress.findMany({
-    where: { learnerProfileId: learner.id },
-    include: { lesson: { include: { unit: { include: { course: { include: { grade: true } } } } } } },
-    orderBy: { lastActivityAt: "desc" },
-    take: 3,
-  });
-  const studyDays = await prisma.productEvent.findMany({ where: { learnerProfileId: learner.id, createdAt: { gte: daysAgo(14) } }, select: { createdAt: true } });
+  const now = new Date();
+  const [dueReviews, nextReview, recent, studyDays] = await Promise.all([
+    prisma.reviewSchedule.count({ where: { learnerProfileId: learner.id, dueAt: { lte: now } } }),
+    prisma.reviewSchedule.findFirst({
+      where: { learnerProfileId: learner.id, dueAt: { gt: now } },
+      select: { dueAt: true, activity: { select: { title: true } } },
+      orderBy: { dueAt: "asc" },
+    }),
+    prisma.lessonProgress.findMany({
+      where: { learnerProfileId: learner.id },
+      include: { lesson: { include: { unit: { include: { course: { include: { grade: true } } } } } } },
+      orderBy: { lastActivityAt: "desc" },
+      take: 3,
+    }),
+    prisma.productEvent.findMany({ where: { learnerProfileId: learner.id, createdAt: { gte: daysAgo(14) } }, select: { createdAt: true } }),
+  ]);
   const streak = new Set(studyDays.map((item) => item.createdAt.toISOString().slice(0, 10))).size;
+  const continueItem = recent[0];
+  const nextReviewLabel = nextReview ? new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", dateStyle: "short", timeStyle: "short" }).format(nextReview.dueAt) : null;
 
   return <main className="min-h-screen bg-[#f5f8f5] text-[#163129]">
     <header className="border-b bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4"><Link href="/" className="font-black">English123</Link><form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><button className="text-sm font-bold text-slate-600">Đăng xuất</button></form></div></header>
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="font-bold text-emerald-700">Bảng học của em</p><h1 className="mt-1 text-4xl font-black">Xin chào, {learner.displayName}!</h1><p className="mt-2 text-slate-600">{learner.grade?.name || "Tự do chọn lộ trình"} · Mỗi ngày một bài ngắn nhé.</p></div><ProfilePicker profiles={profiles.map(({ id, displayName, grade }) => ({ id, displayName, gradeName: grade?.name || "Tự chọn" }))}/></div>
 
+      {continueItem && <section className="mt-7 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-sky-950 p-6 text-white"><div><p className="text-xs font-black uppercase tracking-wider text-sky-300">Học tiếp từ lần trước</p><h2 className="mt-2 text-2xl font-black">{continueItem.lesson.unit.title} · {continueItem.lesson.title}</h2><p className="mt-1 text-sm text-sky-100">Đã lưu {continueItem.percent}% bài học · mở lại đúng bước gần nhất</p></div><Link href={`/learn/${continueItem.lesson.unit.course.grade.slug}/${continueItem.lesson.unit.slug}`} className="rounded-xl bg-white px-5 py-3 font-black text-sky-950">Học tiếp →</Link></section>}
+
       <section className="mt-7 grid gap-4 sm:grid-cols-3">
-        <article className="rounded-3xl bg-emerald-800 p-6 text-white"><p className="text-sm text-emerald-100">Ôn tập hôm nay</p><p className="mt-2 text-4xl font-black">{dueReviews}</p><Link href="/review" className="mt-5 inline-block rounded-xl bg-white px-4 py-2 text-sm font-black text-emerald-800">Ôn ngay</Link></article>
+        <article className="rounded-3xl bg-emerald-800 p-6 text-white"><p className="text-sm text-emerald-100">Ôn tập đến hạn</p><p className="mt-2 text-4xl font-black">{dueReviews}</p><p className="mt-2 min-h-10 text-xs text-emerald-100">{dueReviews > 0 ? `${dueReviews} mục cần ôn ngay` : nextReviewLabel ? `${nextReview?.activity.title} · ${nextReviewLabel}` : "Chưa có lịch ôn"}</p><Link href="/review" className="mt-3 inline-block rounded-xl bg-white px-4 py-2 text-sm font-black text-emerald-800">Xem lịch ôn</Link></article>
         <article className="rounded-3xl bg-white p-6 shadow-sm"><p className="text-sm text-slate-500">Ngày học trong 14 ngày</p><p className="mt-2 text-4xl font-black">{streak}</p></article>
         <article className="rounded-3xl bg-[#ffefd0] p-6"><p className="text-sm text-amber-800">Lộ trình có thể học</p><p className="mt-2 text-4xl font-black">{courses.length}</p></article>
       </section>
@@ -74,7 +86,7 @@ export default async function DashboardPage() {
         })}</div>
       </section>
 
-      {recent.length > 0 && <section className="mt-10"><h2 className="text-xl font-black">Hoạt động gần đây</h2><div className="mt-3 space-y-2">{recent.map((item) => <p key={item.id} className="rounded-2xl bg-white p-4 text-sm"><strong>{item.lesson.title}</strong> · {item.percent}% · {item.lesson.unit.title}</p>)}</div></section>}
+      {recent.length > 0 && <section className="mt-10"><h2 className="text-xl font-black">Hoạt động gần đây</h2><div className="mt-3 space-y-2">{recent.map((item) => <Link key={item.id} href={`/learn/${item.lesson.unit.course.grade.slug}/${item.lesson.unit.slug}`} className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 text-sm hover:bg-emerald-50"><span><strong>{item.lesson.title}</strong> · {item.percent}% · {item.lesson.unit.title}</span><strong className="text-emerald-700">Học tiếp →</strong></Link>)}</div></section>}
     </div>
   </main>;
 }
