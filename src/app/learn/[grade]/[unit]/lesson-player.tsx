@@ -218,6 +218,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
         {activity.type === "MATCHING" && <MatchingActivity
           pairs={pairs}
           selectedPairs={(answer.pairs || []) as Array<{ left: string; right: string }>}
+          shuffleKey={activity.id}
           onChange={(left, right) => {
             const current = (answer.pairs || []) as Array<{ left: string; right: string }>;
             setAnswer({ pairs: [...current.filter((item) => item.left !== left), ...(right ? [{ left, right }] : [])] });

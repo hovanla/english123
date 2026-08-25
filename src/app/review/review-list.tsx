@@ -32,6 +32,7 @@ export default function ReviewList() {
     {item.activity.type === "MATCHING" && <MatchingActivity
       pairs={pairs}
       selectedPairs={(answer.pairs || []) as Array<{ left: string; right: string }>}
+      shuffleKey={item.activity.id}
       onChange={(left, right) => {
         const current = (answer.pairs || []) as Array<{ left: string; right: string }>;
         setAnswer({ pairs: [...current.filter((value) => value.left !== left), ...(right ? [{ left, right }] : [])] });
