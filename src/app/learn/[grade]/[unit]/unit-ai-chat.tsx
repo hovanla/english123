@@ -34,8 +34,19 @@ export default function UnitAiChat({
   const [activeScenarioId, setActiveScenarioId] = useState<string | undefined>();
   const [error, setError] = useState("");
   const recordingRef = useRef<ShortAudioRecording | null>(null);
+  const chatListRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => () => recordingRef.current?.cancel(), []);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const chatList = chatListRef.current;
+    if (!chatList) return;
+    const frame = window.requestAnimationFrame(() => {
+      chatList.scrollTo({ top: chatList.scrollHeight, behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [expanded, messages, pending]);
 
   function listenWithBrowser() {
     setListening(true);
@@ -200,7 +211,7 @@ export default function UnitAiChat({
         {starters.map((starter) => <button type="button" key={starter} onClick={() => setDraft(starter)} className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-900 hover:bg-violet-100">{starter}</button>)}
       </div>}
 
-      <div aria-live="polite" className="mt-4 max-h-80 space-y-3 overflow-y-auto rounded-2xl bg-slate-50 p-3">
+      <div ref={chatListRef} aria-live="polite" className="mt-4 max-h-80 scroll-smooth space-y-3 overflow-y-auto rounded-2xl bg-slate-50 p-3">
         {messages.length === 0 && <div className="rounded-xl bg-white p-3 text-sm leading-6 text-slate-700">
           <strong>AI tutor:</strong> Hi! Choose a real-life situation, speak, or type one short English sentence.
         </div>}
