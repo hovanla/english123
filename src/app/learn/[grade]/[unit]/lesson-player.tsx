@@ -9,6 +9,30 @@ import MatchingActivity from "@/components/matching-activity";
 
 type Activity = { id: string; type: string; title: string; instruction: string; payload: Record<string, unknown>; order: number };
 type Lesson = { id: string; title: string; description: string; estimatedMinutes: number; activities: Activity[] };
+type PronunciationFeedback = ReturnType<typeof assessPronunciation> & {
+  passed?: boolean;
+  transcript?: string;
+  confidence?: number;
+  feedback?: string;
+  tip?: string;
+  source?: "nvidia" | "openai" | "local";
+};
+
+function PronunciationFeedbackCard({ feedback, pending }: { feedback: PronunciationFeedback | null; pending: boolean }) {
+  if (!feedback && !pending) return null;
+  if (!feedback) return <div aria-live="polite" className="mt-3 rounded-xl border border-purple-200 bg-white p-3 text-sm font-bold text-purple-900">AI đang phân tích câu em vừa nói…</div>;
+  return <div aria-live="polite" className="mt-3 rounded-xl border border-purple-200 bg-white p-3 text-left">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <p className="font-black text-purple-900">Kết quả đọc đúng câu: {feedback.score}%</p>
+      <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${feedback.source === "local" ? "bg-slate-100 text-slate-600" : "bg-purple-100 text-purple-800"}`}>{feedback.source === "local" ? "Chấm cơ bản" : "AI nhận xét"}</span>
+    </div>
+    {feedback.transcript && <p className="mt-2 text-xs text-slate-500">Trình duyệt nghe được: <strong className="text-slate-800">{feedback.transcript}</strong></p>}
+    <p className="mt-2 text-sm text-slate-700">{feedback.feedback || feedback.message}</p>
+    {feedback.tip && <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm font-bold text-amber-900">Gợi ý: {feedback.tip}</p>}
+    {feedback.needsPractice.length > 0 && <p className="mt-2 text-sm font-bold text-amber-800">Từ cần đọc lại: {feedback.needsPractice.join(", ")}</p>}
+    {pending && <p className="mt-2 text-xs font-bold text-purple-700">AI đang bổ sung nhận xét…</p>}
+  </div>;
+}
 
 function LessonImage({ src, alt, spriteIndex, spriteColumns = 3, spriteRows = 2, priority }: { src: string; alt: string; spriteIndex?: number; spriteColumns?: number; spriteRows?: number; priority: boolean }) {
   if (spriteIndex === undefined) {
@@ -38,7 +62,8 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
   const [hintVisible, setHintVisible] = useState(false);
   const [imageHintVisible, setImageHintVisible] = useState(false);
   const [recallSeconds, setRecallSeconds] = useState(5);
-  const [pronunciationFeedback, setPronunciationFeedback] = useState<ReturnType<typeof assessPronunciation> | null>(null);
+  const [pronunciationFeedback, setPronunciationFeedback] = useState<PronunciationFeedback | null>(null);
+  const [pronunciationPending, setPronunciationPending] = useState(false);
   const [speechError, setSpeechError] = useState("");
   const activity = activities[index];
   const isResponseRecall = activity?.type === "SENTENCE" && activity.payload.mode === "RESPONSE_RECALL";
@@ -85,6 +110,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
     setImageHintVisible(false);
     setRecallSeconds(5);
     setPronunciationFeedback(null);
+    setPronunciationPending(false);
     setSpeechError("");
   }
 
@@ -115,12 +141,32 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
     else setResult({ score: data.score, passed: data.passed, reviewDueAt: data.reviewDueAt });
   }
 
+  async function requestAiPronunciation(target: string, transcript: string, confidence?: number) {
+    const local = { ...assessPronunciation(target, transcript), transcript, confidence, source: "local" as const };
+    setPronunciationFeedback(local);
+    setPronunciationPending(true);
+    try {
+      const response = await fetch("/api/ai/pronunciation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activityId: activity.id, transcript, confidence }),
+      });
+      const data = await response.json();
+      if (response.ok) setPronunciationFeedback(data as PronunciationFeedback);
+      else setSpeechError("AI chưa thể nhận xét lúc này. Em vẫn xem được điểm nhận diện cơ bản bên dưới.");
+    } catch {
+      setSpeechError("AI đang bận. Em vẫn xem được điểm nhận diện cơ bản bên dưới.");
+    } finally {
+      setPronunciationPending(false);
+    }
+  }
+
   function startSpeech(target: string, answerKey: "text" | "transcript" = "transcript") {
     setSpeechError("");
     const supported = startEnglishRecognition(
-      (transcript) => {
+      (transcript, confidence) => {
         setAnswer({ [answerKey]: transcript });
-        setPronunciationFeedback(assessPronunciation(target, transcript));
+        void requestAiPronunciation(target, transcript, confidence);
       },
       () => setSpeechError("Chưa nghe rõ. Em hãy thử lại ở nơi yên tĩnh và nói chậm hơn."),
     );
@@ -260,15 +306,12 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
             onChange={(event) => { setAnswer({ text: event.target.value }); setPronunciationFeedback(null); }}
           />
           <div className="mt-3 flex flex-wrap gap-2">
-            <button type="button" onClick={() => startSpeech(String(payload.target || ""), "text")} className="min-h-11 rounded-xl bg-purple-700 px-4 py-2 font-black text-white">🎙 Nói và nhận diện</button>
+            <button type="button" disabled={pronunciationPending} onClick={() => startSpeech(String(payload.target || ""), "text")} className="min-h-11 rounded-xl bg-purple-700 px-4 py-2 font-black text-white disabled:opacity-60">🎙 Nói để AI chấm</button>
             {pronunciationFeedback && <button type="button" onClick={() => speakEnglish(String(payload.target || ""))} className="min-h-11 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900">🔊 Nghe câu chuẩn</button>}
           </div>
+          <p className="mt-2 text-xs leading-5 text-slate-500">Không lưu bản ghi âm; chỉ văn bản nhận diện ngắn được gửi tới AI để nhận xét.</p>
           {speechError && <p className="mt-2 text-sm font-bold text-rose-700">{speechError}</p>}
-          {pronunciationFeedback && <div aria-live="polite" className="mt-3 rounded-xl border border-purple-200 bg-white p-3">
-            <p className="font-black text-purple-900">Độ khớp nhận diện: {pronunciationFeedback.score}%</p>
-            <p className="mt-1 text-sm text-slate-700">{pronunciationFeedback.message}</p>
-            {pronunciationFeedback.needsPractice.length > 0 && <p className="mt-1 text-sm font-bold text-amber-800">Từ cần nói rõ hơn: {pronunciationFeedback.needsPractice.join(", ")}</p>}
-          </div>}
+          <PronunciationFeedbackCard feedback={pronunciationFeedback} pending={pronunciationPending}/>
         </div>}
 
         {(activity.type === "LISTEN_TYPE" || (activity.type === "SENTENCE" && !isResponseRecall)) && <input
@@ -284,14 +327,10 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
           <p className="text-sm font-black uppercase tracking-wider text-purple-700">Nghe → nhìn tình huống → nói ngay</p>
           <p className="mt-3 text-3xl font-black">{String(payload.target)}</p>
           {Boolean(payload.translation) && <p className="mt-2 text-slate-600">{String(payload.translation)}</p>}
-          <div className="mt-5 flex flex-wrap justify-center gap-3"><button type="button" onClick={() => speakEnglish(String(payload.target || ""))} className="rounded-2xl bg-sky-100 px-5 py-3 font-black text-sky-900">🔊 Nghe mẫu</button><button type="button" onClick={() => startSpeech(String(payload.target || ""))} className="rounded-2xl bg-purple-700 px-5 py-3 font-black text-white">🎙 Nói ngay</button></div>
-          <p className="mt-3 text-sm text-slate-600">{answer.transcript ? `Em đã nói: ${answer.transcript}` : answer.unsupported ? "Thiết bị không nhận dạng giọng nói. Em vẫn có thể nghe và nói theo; bài học không bị khóa." : "Giọng nói chỉ được nhận dạng trên thiết bị và không được lưu."}</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3"><button type="button" onClick={() => speakEnglish(String(payload.target || ""))} className="rounded-2xl bg-sky-100 px-5 py-3 font-black text-sky-900">🔊 Nghe mẫu</button><button type="button" disabled={pronunciationPending} onClick={() => startSpeech(String(payload.target || ""))} className="rounded-2xl bg-purple-700 px-5 py-3 font-black text-white disabled:opacity-60">🎙 Nói để AI chấm</button></div>
+          <p className="mt-3 text-sm text-slate-600">{answer.unsupported ? "Thiết bị không nhận dạng giọng nói. Em vẫn có thể nghe và nói theo; bài học không bị khóa." : "Không lưu bản ghi âm; chỉ văn bản nhận diện ngắn được gửi tới AI để nhận xét."}</p>
           {speechError && <p className="mt-2 text-sm font-bold text-rose-700">{speechError}</p>}
-          {pronunciationFeedback && <div aria-live="polite" className="mt-3 rounded-xl bg-white p-3 text-left">
-            <p className="font-black text-purple-900">Độ khớp nhận diện: {pronunciationFeedback.score}%</p>
-            <p className="mt-1 text-sm">{pronunciationFeedback.message}</p>
-            {pronunciationFeedback.needsPractice.length > 0 && <p className="mt-1 text-sm font-bold text-amber-800">Từ cần nói rõ hơn: {pronunciationFeedback.needsPractice.join(", ")}</p>}
-          </div>}
+          <PronunciationFeedbackCard feedback={pronunciationFeedback} pending={pronunciationPending}/>
         </div>}
 
         {activity.type === "SHORT_WRITING" && <textarea
