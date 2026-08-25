@@ -28,6 +28,7 @@ AUTH_URL="http://localhost:3001"
 NEXTAUTH_URL="http://localhost:3001"
 AI_PROVIDER="groq"
 GROQ_API_KEY=""
+GROQ_API_KEYS="gsk_tai_khoan_1,gsk_tai_khoan_2,gsk_tai_khoan_3"
 GROQ_BASE_URL="https://api.groq.com/openai/v1"
 GROQ_CHAT_MODEL="openai/gpt-oss-20b"
 GROQ_SPEECH_MODEL="whisper-large-v3-turbo"
@@ -40,7 +41,7 @@ OPENAI_API_KEY=""
 OPENAI_MODEL="gpt-5.6"
 ```
 
-`GROQ_API_KEY` bật GPT-OSS 20B cho hội thoại và Whisper cho nhận dạng đoạn ghi âm. NVIDIA và OpenAI vẫn là phương án dự phòng cho phản hồi văn bản. Nếu không có Groq, ứng dụng dùng nhận diện giọng nói của trình duyệt khi được hỗ trợ.
+`GROQ_API_KEY` dùng cho một khóa. Nếu có nhiều tài khoản Groq do bạn sở hữu, khai báo các khóa trong `GROQ_API_KEYS`, phân tách bằng dấu phẩy. Hệ thống giữ key hiện tại cho đến khi Groq trả `429`, sau đó tự chuyển sang key kế tiếp và chỉ thử lại key cũ khi hết thời gian `retry-after`. NVIDIA và OpenAI vẫn là phương án dự phòng cho phản hồi văn bản. Nếu không có Groq, ứng dụng dùng nhận diện giọng nói của trình duyệt khi được hỗ trợ.
 
 Khởi tạo database local lần đầu rồi chạy ứng dụng:
 

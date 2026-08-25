@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { ContentStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { groqBaseUrl, requestGroqChat } from "@/lib/groq";
+import { groqApiKeys, requestGroqChat } from "@/lib/groq";
 import { getActiveLearner } from "@/lib/learner";
 import { prisma } from "@/lib/prisma";
 import {
@@ -47,21 +47,14 @@ function nvidiaBaseUrl() {
   return (process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\/$/, "");
 }
 
-async function isPromptInjectionByGroq(apiKey: string, message: string) {
-  const response = await fetch(`${groqBaseUrl()}/chat/completions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: process.env.GROQ_SAFETY_MODEL || "meta-llama/llama-prompt-guard-2-86m",
-      messages: [{ role: "user", content: message }],
-      temperature: 0.01,
-      max_tokens: 40,
-    }),
-    signal: AbortSignal.timeout(15_000),
+async function isPromptInjectionByGroq(message: string) {
+  const result = await requestGroqChat([{ role: "user", content: message }], {
+    model: process.env.GROQ_SAFETY_MODEL || "meta-llama/llama-prompt-guard-2-86m",
+    temperature: 0.01,
+    maxTokens: 40,
   });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) return false;
-  const label = extractChatCompletionText(payload);
+  if (result.status < 200 || result.status >= 300) return false;
+  const label = result.text;
   return /(?:prompt\s*injection|jailbreak|malicious|unsafe|\b1\b)/i.test(label);
 }
 
@@ -89,10 +82,10 @@ type AiConfig = { provider: "groq" | "nvidia" | "openai"; apiKey: string };
 
 function getAiConfig(): AiConfig | null {
   const preferred = process.env.AI_PROVIDER?.toLowerCase();
-  if (preferred === "groq" && process.env.GROQ_API_KEY) return { provider: "groq", apiKey: process.env.GROQ_API_KEY };
+  if (preferred === "groq" && groqApiKeys().length) return { provider: "groq", apiKey: "" };
   if (preferred === "nvidia" && process.env.NVIDIA_API_KEY) return { provider: "nvidia", apiKey: process.env.NVIDIA_API_KEY };
   if (preferred === "openai" && process.env.OPENAI_API_KEY) return { provider: "openai", apiKey: process.env.OPENAI_API_KEY };
-  if (process.env.GROQ_API_KEY) return { provider: "groq", apiKey: process.env.GROQ_API_KEY };
+  if (groqApiKeys().length) return { provider: "groq", apiKey: "" };
   if (process.env.NVIDIA_API_KEY) return { provider: "nvidia", apiKey: process.env.NVIDIA_API_KEY };
   if (process.env.OPENAI_API_KEY) return { provider: "openai", apiKey: process.env.OPENAI_API_KEY };
   return null;
@@ -186,7 +179,7 @@ export async function POST(request: Request) {
 
   try {
     const inputFlagged = ai.provider === "groq"
-      ? await isPromptInjectionByGroq(ai.apiKey, parsed.data.message)
+      ? await isPromptInjectionByGroq(parsed.data.message)
       : ai.provider === "nvidia"
         ? await isFlaggedByNvidia(ai.apiKey, parsed.data.message)
         : await isFlaggedByOpenAI(ai.apiKey, parsed.data.message);

@@ -2,7 +2,7 @@ import { ContentStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { buildAiPronunciationPrompt, parseAiPronunciationFeedback } from "@/lib/ai-pronunciation";
-import { requestGroqChat, transcribeGroqAudio, validateShortAudio } from "@/lib/groq";
+import { groqApiKeys, requestGroqChat, transcribeGroqAudio, validateShortAudio } from "@/lib/groq";
 import { getActiveLearner } from "@/lib/learner";
 import { assessPronunciation } from "@/lib/pronunciation";
 import { prisma } from "@/lib/prisma";
@@ -21,10 +21,10 @@ type AiConfig = { provider: "groq" | "nvidia" | "openai"; apiKey: string };
 
 function getAiConfig(): AiConfig | null {
   const preferred = process.env.AI_PROVIDER?.toLowerCase();
-  if (preferred === "groq" && process.env.GROQ_API_KEY) return { provider: "groq", apiKey: process.env.GROQ_API_KEY };
+  if (preferred === "groq" && groqApiKeys().length) return { provider: "groq", apiKey: "" };
   if (preferred === "nvidia" && process.env.NVIDIA_API_KEY) return { provider: "nvidia", apiKey: process.env.NVIDIA_API_KEY };
   if (preferred === "openai" && process.env.OPENAI_API_KEY) return { provider: "openai", apiKey: process.env.OPENAI_API_KEY };
-  if (process.env.GROQ_API_KEY) return { provider: "groq", apiKey: process.env.GROQ_API_KEY };
+  if (groqApiKeys().length) return { provider: "groq", apiKey: "" };
   if (process.env.NVIDIA_API_KEY) return { provider: "nvidia", apiKey: process.env.NVIDIA_API_KEY };
   if (process.env.OPENAI_API_KEY) return { provider: "openai", apiKey: process.env.OPENAI_API_KEY };
   return null;
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
     try {
       const result = await transcribeGroqAudio(audio);
       if (result.status === 503) return NextResponse.json({ error: "GROQ_NOT_CONFIGURED" }, { status: 503 });
-      if (result.status === 429) return NextResponse.json({ error: "RATE_LIMITED" }, { status: 429 });
+      if (result.status === 429) return NextResponse.json({ error: "RATE_LIMITED", retryAfter: result.retryAfter }, { status: 429 });
       if (result.status < 200 || result.status >= 300 || !result.transcript) {
         return NextResponse.json({ error: "SPEECH_NOT_RECOGNIZED" }, { status: 422 });
       }

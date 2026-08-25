@@ -58,13 +58,19 @@ export default function UnitAiChat({
 
   async function transcribeWithGroq(audio: Blob) {
     setListening(true);
+    let useBrowserFallback = false;
     try {
       const form = new FormData();
       form.append("audio", audio, `conversation.${audio.type.includes("mp4") ? "m4a" : "webm"}`);
       const response = await fetch("/api/ai/speech-to-text", { method: "POST", body: form });
       const payload = await response.json().catch(() => null) as { transcript?: string; error?: string } | null;
       if (!response.ok || !payload?.transcript) {
-        setError(payload?.error === "RATE_LIMITED" ? "Groq đang đạt giới hạn tạm thời. Em hãy thử lại sau một phút." : "AI chưa nghe rõ đoạn này. Em hãy nói lại gần micro hơn.");
+        if (payload?.error === "RATE_LIMITED") {
+          setError("Tất cả key Groq đang đạt giới hạn. Đã chuyển sang nhận dạng của trình duyệt; em hãy nói lại.");
+          useBrowserFallback = true;
+        } else {
+          setError("AI chưa nghe rõ đoạn này. Em hãy nói lại gần micro hơn.");
+        }
         return;
       }
       if (voiceMode) await sendMessage(payload.transcript);
@@ -73,6 +79,7 @@ export default function UnitAiChat({
       setError("Dịch vụ nhận giọng nói đang bận. Em vẫn có thể nhập câu.");
     } finally {
       setListening(false);
+      if (useBrowserFallback) window.setTimeout(listenWithBrowser, 0);
     }
   }
 

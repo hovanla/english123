@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const result = await transcribeGroqAudio(audio);
     if (result.status === 503) return NextResponse.json({ error: "GROQ_NOT_CONFIGURED" }, { status: 503 });
-    if (result.status === 429) return NextResponse.json({ error: "RATE_LIMITED" }, { status: 429 });
+    if (result.status === 429) return NextResponse.json({ error: "RATE_LIMITED", retryAfter: result.retryAfter }, { status: 429 });
     if (result.status < 200 || result.status >= 300 || !result.transcript) {
       return NextResponse.json({ error: "SPEECH_NOT_RECOGNIZED" }, { status: 422 });
     }

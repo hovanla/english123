@@ -184,7 +184,12 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
         setAnswer({ [answerKey]: data.transcript });
         setPronunciationFeedback(data);
       } else {
-        setSpeechError(data?.error === "RATE_LIMITED" ? "Groq đang đạt giới hạn tạm thời. Em hãy thử lại sau một phút." : "AI chưa nghe rõ. Em hãy nói lại gần micro, chậm và rõ hơn.");
+        if (data?.error === "RATE_LIMITED") {
+          startSpeech(target, answerKey);
+          setSpeechError("Tất cả key Groq đang đạt giới hạn. Đã chuyển sang nhận dạng của trình duyệt; em hãy nói lại một lần.");
+        } else {
+          setSpeechError("AI chưa nghe rõ. Em hãy nói lại gần micro, chậm và rõ hơn.");
+        }
       }
     } catch {
       setSpeechError("Dịch vụ chấm phát âm đang bận. Em hãy thử lại sau.");
