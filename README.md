@@ -14,8 +14,8 @@ Nền tảng tự học tiếng Anh K–12 dành cho học sinh Việt Nam. Bả
 - CMS có workflow, nhân bản unit, sắp xếp qua API, audit log, revision và upload asset kèm metadata bản quyền.
 - Đặt lại mật khẩu bằng token 30 phút và email transactional.
 - Analytics pilot không lưu bài viết hoặc bản ghi âm.
-- Nhận diện câu nói tiếng Anh ngay trên trình duyệt, phản hồi độ khớp và các từ cần nói rõ hơn; không lưu bản ghi âm.
-- Phòng hội thoại AI theo từng unit, chỉ nhận nội dung bài đã xuất bản và không lưu nội dung chat vào database.
+- Groq Whisper nhận dạng đoạn đọc ngắn, phản hồi độ khớp và các từ cần nói rõ hơn; không lưu tệp âm thanh.
+- Phòng hội thoại nói hoặc nhắn tin theo từng unit, có tình huống đóng vai đời thực và không lưu nội dung chat vào database.
 
 ## Chạy local nhanh bằng SQLite
 
@@ -26,16 +26,21 @@ DATABASE_URL="file:./dev.db"
 AUTH_SECRET="english123-local-development-secret-change-in-production"
 AUTH_URL="http://localhost:3001"
 NEXTAUTH_URL="http://localhost:3001"
-OPENAI_API_KEY=""
-OPENAI_MODEL="gpt-5.6"
-AI_PROVIDER="nvidia"
+AI_PROVIDER="groq"
+GROQ_API_KEY=""
+GROQ_BASE_URL="https://api.groq.com/openai/v1"
+GROQ_CHAT_MODEL="openai/gpt-oss-20b"
+GROQ_SPEECH_MODEL="whisper-large-v3-turbo"
+GROQ_SAFETY_MODEL="meta-llama/llama-prompt-guard-2-86m"
 NVIDIA_API_KEY=""
 NVIDIA_BASE_URL="https://integrate.api.nvidia.com/v1"
 NVIDIA_MODEL="openai/gpt-oss-20b"
 NVIDIA_SAFETY_MODEL="nvidia/nemotron-3.5-content-safety"
+OPENAI_API_KEY=""
+OPENAI_MODEL="gpt-5.6"
 ```
 
-`NVIDIA_API_KEY` và `OPENAI_API_KEY` đều là tùy chọn. Nếu có khóa NVIDIA, phòng chat mặc định dùng GPT-OSS 20B qua NVIDIA NIM; OpenAI vẫn là phương án dự phòng. Nếu để trống cả hai, toàn bộ bài học và nhận diện giọng nói vẫn hoạt động, chỉ phòng hội thoại AI hiển thị trạng thái chưa cấu hình.
+`GROQ_API_KEY` bật GPT-OSS 20B cho hội thoại và Whisper cho nhận dạng đoạn ghi âm. NVIDIA và OpenAI vẫn là phương án dự phòng cho phản hồi văn bản. Nếu không có Groq, ứng dụng dùng nhận diện giọng nói của trình duyệt khi được hỗ trợ.
 
 Khởi tạo database local lần đầu rồi chạy ứng dụng:
 
@@ -87,12 +92,12 @@ Script giữ nguyên ID Grade, Unit và các nội dung cũ, chuyển chúng th�
 Production mặc định dùng Supabase PostgreSQL. Hướng dẫn đầy đủ nằm tại [`docs/SUPABASE_DEPLOYMENT.md`](docs/SUPABASE_DEPLOYMENT.md).
 
 1. Tạo Supabase project; dùng Transaction pooler cho `DATABASE_URL` và Direct connection cho `DIRECT_URL`.
-2. Khai báo `AUTH_SECRET`, `AUTH_URL`, `NEXTAUTH_URL`, `BLOB_READ_WRITE_TOKEN`, `RESEND_API_KEY`, `EMAIL_FROM` và `NVIDIA_API_KEY` (hoặc `OPENAI_API_KEY`) nếu bật phòng hội thoại AI.
+2. Khai báo `AUTH_SECRET`, `AUTH_URL`, `NEXTAUTH_URL`, `BLOB_READ_WRITE_TOKEN`, `RESEND_API_KEY`, `EMAIL_FROM` và `GROQ_API_KEY` nếu bật chấm phát âm và hội thoại AI.
 3. Chạy `npm run db:deploy`, sau đó `npm run db:seed` một lần với thông tin bootstrap admin.
 4. Sau lần seed đầu, xóa `BOOTSTRAP_ADMIN_PASSWORD` khỏi biến môi trường.
 5. Bật backup tự động cho PostgreSQL và dùng môi trường Preview làm staging.
 
-Asset upload giới hạn 10 MB và chỉ chấp nhận JPEG, PNG, WebP, MP3 hoặc WAV. Giọng nói được xử lý tạm trong trình duyệt; ứng dụng không lưu bản ghi âm. Phòng AI không gửi tên hoặc năm sinh hồ sơ, không lưu nội dung hội thoại và chặn dữ liệu liên hệ rõ ràng. Với người học dưới 13 tuổi, cần hoàn tất cấu hình Zero Data Retention phù hợp trước khi bật AI ở production.
+Asset upload giới hạn 10 MB và chỉ chấp nhận JPEG, PNG, WebP, MP3 hoặc WAV. Đoạn ghi âm luyện tập được giới hạn 4 MB, gửi tạm tới Groq Whisper và không được lưu trong database hoặc kho tệp. Phòng AI không gửi tên hoặc năm sinh hồ sơ, không lưu nội dung hội thoại và chặn dữ liệu liên hệ rõ ràng. Với người học dưới 13 tuổi, cần hoàn tất cấu hình bảo vệ dữ liệu phù hợp trước khi bật AI ở production.
 
 ## Kiểm tra
 

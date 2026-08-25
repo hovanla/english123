@@ -17,6 +17,8 @@ describe("unit tutor", () => {
     expect(context).toContain("Vocabulary: hello = xin chào");
     expect(context).toContain("Useful sentence: How are you?");
     expect(buildUnitTutorInstructions(context)).toContain("Do not leave the unit topic");
+    expect(buildUnitTutorInstructions(context, "Gặp một người bạn mới.")).toContain("ACTIVE REAL-LIFE ROLE-PLAY");
+    expect(buildUnitTutorInstructions(context, "Gặp một người bạn mới.")).toContain("Gặp một người bạn mới.");
   });
 
   it("detects contact details and extracts Responses API text", () => {

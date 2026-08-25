@@ -7,17 +7,18 @@ const feedbackSchema = z.object({
 
 export type AiPronunciationFeedback = z.infer<typeof feedbackSchema>;
 
-export function buildAiPronunciationPrompt({ target, transcript, score, needsPractice, confidence }: { target: string; transcript: string; score: number; needsPractice: string[]; confidence?: number }) {
-  return `The browser has already converted a Vietnamese learner's English speech to text. Give concise, encouraging Vietnamese feedback based only on this recognition result.
+export function buildAiPronunciationPrompt({ target, transcript, score, needsPractice, confidence, recognizer = "browser" }: { target: string; transcript: string; score: number; needsPractice: string[]; confidence?: number; recognizer?: "browser" | "groq-whisper" }) {
+  return `A speech recognition service has converted a Vietnamese learner's English speech to text. Give concise, encouraging Vietnamese feedback based only on this recognition result.
 
 Important:
-- You did not hear the audio. Never claim to assess accent, mouth position, stress, or individual phonemes.
+- You receive the transcript and matching score, not reliable phoneme measurements. Never claim to assess mouth position or individual phonemes.
 - Explain whether the recognized words match the target and focus on missing or changed words.
+- Give one practical instruction: split the target into a short chunk, listen again, and repeat it.
 - Do not repeat or request personal information.
 - Return only valid JSON with this exact shape: {"feedback":"...","tip":"..."}.
 
 DATA
-${JSON.stringify({ target, transcript, score, needsPractice, recognitionConfidence: confidence ?? null })}`;
+${JSON.stringify({ target, transcript, score, needsPractice, recognitionConfidence: confidence ?? null, recognizer })}`;
 }
 
 export function parseAiPronunciationFeedback(value: string): AiPronunciationFeedback | null {

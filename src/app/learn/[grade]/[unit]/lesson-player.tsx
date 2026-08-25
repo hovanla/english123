@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { startShortAudioRecording, type ShortAudioRecording } from "@/lib/browser-audio";
 import { speakEnglish, startEnglishRecognition } from "@/lib/browser-speech";
 import { assessPronunciation } from "@/lib/pronunciation";
 import MatchingActivity from "@/components/matching-activity";
@@ -13,9 +14,11 @@ type PronunciationFeedback = ReturnType<typeof assessPronunciation> & {
   passed?: boolean;
   transcript?: string;
   confidence?: number;
+  target?: string;
+  recognizer?: "browser" | "groq-whisper";
   feedback?: string;
   tip?: string;
-  source?: "nvidia" | "openai" | "local";
+  source?: "groq" | "nvidia" | "openai" | "local";
 };
 
 function PronunciationFeedbackCard({ feedback, pending }: { feedback: PronunciationFeedback | null; pending: boolean }) {
@@ -24,9 +27,10 @@ function PronunciationFeedbackCard({ feedback, pending }: { feedback: Pronunciat
   return <div aria-live="polite" className="mt-3 rounded-xl border border-purple-200 bg-white p-3 text-left">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="font-black text-purple-900">Kết quả đọc đúng câu: {feedback.score}%</p>
-      <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${feedback.source === "local" ? "bg-slate-100 text-slate-600" : "bg-purple-100 text-purple-800"}`}>{feedback.source === "local" ? "Chấm cơ bản" : "AI nhận xét"}</span>
+      <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${feedback.source === "local" ? "bg-slate-100 text-slate-600" : "bg-purple-100 text-purple-800"}`}>{feedback.source === "local" ? "Chấm cơ bản" : feedback.source === "groq" ? "Groq AI" : "AI nhận xét"}</span>
     </div>
-    {feedback.transcript && <p className="mt-2 text-xs text-slate-500">Trình duyệt nghe được: <strong className="text-slate-800">{feedback.transcript}</strong></p>}
+    {feedback.transcript && <p className="mt-2 text-xs text-slate-500">{feedback.recognizer === "groq-whisper" ? "Groq Whisper" : "Trình duyệt"} nghe được: <strong className="text-slate-800">{feedback.transcript}</strong></p>}
+    {feedback.target && <p className="mt-2 text-sm font-bold text-emerald-900">Câu đọc đúng: {feedback.target}</p>}
     <p className="mt-2 text-sm text-slate-700">{feedback.feedback || feedback.message}</p>
     {feedback.tip && <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm font-bold text-amber-900">Gợi ý: {feedback.tip}</p>}
     {feedback.needsPractice.length > 0 && <p className="mt-2 text-sm font-bold text-amber-800">Từ cần đọc lại: {feedback.needsPractice.join(", ")}</p>}
@@ -50,7 +54,7 @@ function LessonImage({ src, alt, spriteIndex, spriteColumns = 3, spriteRows = 2,
   </div>;
 }
 
-export default function LessonPlayer({ lessons, completionHref, completionLabel, initialActivityIndex = 0, hasSavedProgress = false }: { lessons: Lesson[]; completionHref: string; completionLabel: string; initialActivityIndex?: number; hasSavedProgress?: boolean }) {
+export default function LessonPlayer({ lessons, completionHref, completionLabel, initialActivityIndex = 0, hasSavedProgress = false, voiceConfigured = false }: { lessons: Lesson[]; completionHref: string; completionLabel: string; initialActivityIndex?: number; hasSavedProgress?: boolean; voiceConfigured?: boolean }) {
   const activities = useMemo(() => lessons.flatMap((lesson, lessonIndex) => lesson.activities.map((activity) => ({ ...activity, lessonTitle: lesson.title, lessonIndex }))), [lessons]);
   const lessonStarts = useMemo(() => lessons.map((_, lessonIndex) => activities.findIndex((activity) => activity.lessonIndex === lessonIndex)), [activities, lessons]);
   const [index, setIndex] = useState(() => Math.max(0, Math.min(initialActivityIndex, Math.max(activities.length - 1, 0))));
@@ -64,7 +68,9 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
   const [recallSeconds, setRecallSeconds] = useState(5);
   const [pronunciationFeedback, setPronunciationFeedback] = useState<PronunciationFeedback | null>(null);
   const [pronunciationPending, setPronunciationPending] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [speechError, setSpeechError] = useState("");
+  const recordingRef = useRef<ShortAudioRecording | null>(null);
   const activity = activities[index];
   const isResponseRecall = activity?.type === "SENTENCE" && activity.payload.mode === "RESPONSE_RECALL";
 
@@ -81,6 +87,8 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
     }, 1000);
     return () => window.clearInterval(timer);
   }, [activity?.id, isResponseRecall]);
+
+  useEffect(() => () => recordingRef.current?.cancel(), []);
 
   if (!activity) return <p className="mt-6 rounded-2xl bg-white p-5">Unit này chưa có hoạt động.</p>;
 
@@ -102,6 +110,9 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
     : Object.keys(answer).length > 0;
 
   function resetActivity(nextIndex: number) {
+    recordingRef.current?.cancel();
+    recordingRef.current = null;
+    setRecording(false);
     setIndex(nextIndex);
     setAnswer({});
     setResult(null);
@@ -158,6 +169,58 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
       setSpeechError("AI đang bận. Em vẫn xem được điểm nhận diện cơ bản bên dưới.");
     } finally {
       setPronunciationPending(false);
+    }
+  }
+
+  async function requestRecordedPronunciation(audio: Blob, target: string, answerKey: "text" | "transcript") {
+    setPronunciationPending(true);
+    try {
+      const form = new FormData();
+      form.append("activityId", activity.id);
+      form.append("audio", audio, `pronunciation.${audio.type.includes("mp4") ? "m4a" : "webm"}`);
+      const response = await fetch("/api/ai/pronunciation", { method: "POST", body: form });
+      const data = await response.json().catch(() => null) as (PronunciationFeedback & { error?: string }) | null;
+      if (response.ok && data?.transcript) {
+        setAnswer({ [answerKey]: data.transcript });
+        setPronunciationFeedback(data);
+      } else {
+        setSpeechError(data?.error === "RATE_LIMITED" ? "Groq đang đạt giới hạn tạm thời. Em hãy thử lại sau một phút." : "AI chưa nghe rõ. Em hãy nói lại gần micro, chậm và rõ hơn.");
+      }
+    } catch {
+      setSpeechError("Dịch vụ chấm phát âm đang bận. Em hãy thử lại sau.");
+    } finally {
+      setPronunciationPending(false);
+    }
+  }
+
+  async function toggleRecordedPronunciation(target: string, answerKey: "text" | "transcript" = "transcript") {
+    setSpeechError("");
+    if (!voiceConfigured) {
+      startSpeech(target, answerKey);
+      return;
+    }
+    if (recording) {
+      recordingRef.current?.stop();
+      return;
+    }
+    setPronunciationFeedback(null);
+    setRecording(true);
+    const controller = await startShortAudioRecording(
+      (audio) => {
+        recordingRef.current = null;
+        setRecording(false);
+        void requestRecordedPronunciation(audio, target, answerKey);
+      },
+      () => {
+        recordingRef.current = null;
+        setRecording(false);
+        setSpeechError("Không mở được micro. Hãy cho phép micro hoặc nhập câu bằng bàn phím.");
+      },
+    );
+    recordingRef.current = controller;
+    if (!controller) {
+      setRecording(false);
+      if (!("MediaRecorder" in window) || !navigator.mediaDevices?.getUserMedia) startSpeech(target, answerKey);
     }
   }
 
@@ -306,10 +369,10 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
             onChange={(event) => { setAnswer({ text: event.target.value }); setPronunciationFeedback(null); }}
           />
           <div className="mt-3 flex flex-wrap gap-2">
-            <button type="button" disabled={pronunciationPending} onClick={() => startSpeech(String(payload.target || ""), "text")} className="min-h-11 rounded-xl bg-purple-700 px-4 py-2 font-black text-white disabled:opacity-60">🎙 Nói để AI chấm</button>
+            <button type="button" disabled={pronunciationPending} onClick={() => void toggleRecordedPronunciation(String(payload.target || ""), "text")} className={`min-h-11 rounded-xl px-4 py-2 font-black text-white disabled:opacity-60 ${recording ? "bg-rose-600" : "bg-purple-700"}`}>{recording ? "⏹ Dừng & chấm" : voiceConfigured ? "🎙 Ghi âm để AI chấm" : "🎙 Nói để AI chấm"}</button>
             {pronunciationFeedback && <button type="button" onClick={() => speakEnglish(String(payload.target || ""))} className="min-h-11 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900">🔊 Nghe câu chuẩn</button>}
           </div>
-          <p className="mt-2 text-xs leading-5 text-slate-500">Không lưu bản ghi âm; chỉ văn bản nhận diện ngắn được gửi tới AI để nhận xét.</p>
+          <p className="mt-2 text-xs leading-5 text-slate-500">{voiceConfigured ? "Đoạn ghi âm ngắn được gửi tới Groq Whisper để nhận dạng rồi xóa; English123 không lưu tệp âm thanh." : "Trình duyệt chuyển lời nói thành chữ; English123 không lưu bản ghi âm."}</p>
           {speechError && <p className="mt-2 text-sm font-bold text-rose-700">{speechError}</p>}
           <PronunciationFeedbackCard feedback={pronunciationFeedback} pending={pronunciationPending}/>
         </div>}
@@ -327,8 +390,8 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
           <p className="text-sm font-black uppercase tracking-wider text-purple-700">Nghe → nhìn tình huống → nói ngay</p>
           <p className="mt-3 text-3xl font-black">{String(payload.target)}</p>
           {Boolean(payload.translation) && <p className="mt-2 text-slate-600">{String(payload.translation)}</p>}
-          <div className="mt-5 flex flex-wrap justify-center gap-3"><button type="button" onClick={() => speakEnglish(String(payload.target || ""))} className="rounded-2xl bg-sky-100 px-5 py-3 font-black text-sky-900">🔊 Nghe mẫu</button><button type="button" disabled={pronunciationPending} onClick={() => startSpeech(String(payload.target || ""))} className="rounded-2xl bg-purple-700 px-5 py-3 font-black text-white disabled:opacity-60">🎙 Nói để AI chấm</button></div>
-          <p className="mt-3 text-sm text-slate-600">{answer.unsupported ? "Thiết bị không nhận dạng giọng nói. Em vẫn có thể nghe và nói theo; bài học không bị khóa." : "Không lưu bản ghi âm; chỉ văn bản nhận diện ngắn được gửi tới AI để nhận xét."}</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3"><button type="button" onClick={() => speakEnglish(String(payload.target || ""))} className="rounded-2xl bg-sky-100 px-5 py-3 font-black text-sky-900">🔊 Nghe mẫu</button><button type="button" disabled={pronunciationPending} onClick={() => void toggleRecordedPronunciation(String(payload.target || ""))} className={`rounded-2xl px-5 py-3 font-black text-white disabled:opacity-60 ${recording ? "bg-rose-600" : "bg-purple-700"}`}>{recording ? "⏹ Dừng & chấm" : voiceConfigured ? "🎙 Ghi âm để AI chấm" : "🎙 Nói để AI chấm"}</button></div>
+          <p className="mt-3 text-sm text-slate-600">{answer.unsupported ? "Thiết bị không nhận dạng giọng nói. Em vẫn có thể nghe và nói theo; bài học không bị khóa." : voiceConfigured ? "Đoạn ghi âm ngắn được gửi tới Groq Whisper để nhận dạng rồi xóa; English123 không lưu tệp âm thanh." : "Trình duyệt chuyển lời nói thành chữ; English123 không lưu bản ghi âm."}</p>
           {speechError && <p className="mt-2 text-sm font-bold text-rose-700">{speechError}</p>}
           <PronunciationFeedbackCard feedback={pronunciationFeedback} pending={pronunciationPending}/>
         </div>}

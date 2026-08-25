@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { ContentStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { groqBaseUrl, requestGroqChat } from "@/lib/groq";
 import { getActiveLearner } from "@/lib/learner";
 import { prisma } from "@/lib/prisma";
 import {
@@ -17,12 +18,13 @@ export const runtime = "nodejs";
 
 const historyMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
-  content: z.string().trim().min(1).max(500),
+  content: z.string().trim().min(1).max(1_000),
 });
 const requestSchema = z.object({
   unitId: z.string().cuid(),
   message: z.string().trim().min(1).max(240),
   history: z.array(historyMessageSchema).max(8).default([]),
+  scenarioActivityId: z.string().cuid().optional(),
 });
 
 function safetyIdentifier(learnerId: string) {
@@ -45,6 +47,24 @@ function nvidiaBaseUrl() {
   return (process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\/$/, "");
 }
 
+async function isPromptInjectionByGroq(apiKey: string, message: string) {
+  const response = await fetch(`${groqBaseUrl()}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: process.env.GROQ_SAFETY_MODEL || "meta-llama/llama-prompt-guard-2-86m",
+      messages: [{ role: "user", content: message }],
+      temperature: 0.01,
+      max_tokens: 40,
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) return false;
+  const label = extractChatCompletionText(payload);
+  return /(?:prompt\s*injection|jailbreak|malicious|unsafe|\b1\b)/i.test(label);
+}
+
 async function isFlaggedByNvidia(apiKey: string, message: string, assistantReply?: string) {
   const messages: Array<{ role: "user" | "assistant"; content: string }> = [{ role: "user", content: message }];
   if (assistantReply) messages.push({ role: "assistant", content: assistantReply });
@@ -65,15 +85,22 @@ async function isFlaggedByNvidia(apiKey: string, message: string, assistantReply
   return hasUnsafeSafetyLabel(payload);
 }
 
-type AiConfig = { provider: "nvidia" | "openai"; apiKey: string };
+type AiConfig = { provider: "groq" | "nvidia" | "openai"; apiKey: string };
 
 function getAiConfig(): AiConfig | null {
   const preferred = process.env.AI_PROVIDER?.toLowerCase();
+  if (preferred === "groq" && process.env.GROQ_API_KEY) return { provider: "groq", apiKey: process.env.GROQ_API_KEY };
   if (preferred === "nvidia" && process.env.NVIDIA_API_KEY) return { provider: "nvidia", apiKey: process.env.NVIDIA_API_KEY };
   if (preferred === "openai" && process.env.OPENAI_API_KEY) return { provider: "openai", apiKey: process.env.OPENAI_API_KEY };
+  if (process.env.GROQ_API_KEY) return { provider: "groq", apiKey: process.env.GROQ_API_KEY };
   if (process.env.NVIDIA_API_KEY) return { provider: "nvidia", apiKey: process.env.NVIDIA_API_KEY };
   if (process.env.OPENAI_API_KEY) return { provider: "openai", apiKey: process.env.OPENAI_API_KEY };
   return null;
+}
+
+async function requestGroqReply(instructions: string, history: Array<{ role: "user" | "assistant"; content: string }>) {
+  const result = await requestGroqChat([{ role: "system", content: instructions }, ...history], { temperature: 0.6, maxTokens: 420 });
+  return { status: result.status, reply: result.text };
 }
 
 async function requestNvidiaReply(apiKey: string, instructions: string, history: Array<{ role: "user" | "assistant"; content: string }>) {
@@ -145,10 +172,24 @@ export async function POST(request: Request) {
   });
   if (!unit) return NextResponse.json({ error: "UNIT_NOT_FOUND" }, { status: 404 });
 
+  let scenario = "";
+  if (parsed.data.scenarioActivityId) {
+    const selected = unit.lessons.flatMap((lesson) => lesson.activities).find((activity) => activity.id === parsed.data.scenarioActivityId);
+    const payload = selected && typeof selected.payload === "object" && selected.payload !== null && !Array.isArray(selected.payload)
+      ? selected.payload as Record<string, unknown>
+      : {};
+    if (typeof payload.scenario !== "string" || !payload.scenario.trim()) {
+      return NextResponse.json({ error: "SCENARIO_NOT_FOUND" }, { status: 400 });
+    }
+    scenario = payload.scenario.trim().slice(0, 500);
+  }
+
   try {
-    const inputFlagged = ai.provider === "nvidia"
-      ? await isFlaggedByNvidia(ai.apiKey, parsed.data.message)
-      : await isFlaggedByOpenAI(ai.apiKey, parsed.data.message);
+    const inputFlagged = ai.provider === "groq"
+      ? await isPromptInjectionByGroq(ai.apiKey, parsed.data.message)
+      : ai.provider === "nvidia"
+        ? await isFlaggedByNvidia(ai.apiKey, parsed.data.message)
+        : await isFlaggedByOpenAI(ai.apiKey, parsed.data.message);
     if (inputFlagged) {
       return NextResponse.json({
         error: "UNSAFE_MESSAGE",
@@ -157,15 +198,20 @@ export async function POST(request: Request) {
     }
 
     const history = [...parsed.data.history, { role: "user" as const, content: parsed.data.message }];
-    const instructions = buildUnitTutorInstructions(buildUnitTutorContext(unit));
-    const result = ai.provider === "nvidia"
-      ? await requestNvidiaReply(ai.apiKey, instructions, history)
-      : await requestOpenAiReply(ai.apiKey, learner.id, instructions, history);
+    const instructions = buildUnitTutorInstructions(buildUnitTutorContext(unit), scenario);
+    const result = ai.provider === "groq"
+      ? await requestGroqReply(instructions, history)
+      : ai.provider === "nvidia"
+        ? await requestNvidiaReply(ai.apiKey, instructions, history)
+        : await requestOpenAiReply(ai.apiKey, learner.id, instructions, history);
     if (result.status < 200 || result.status >= 300) {
       return NextResponse.json({ error: "AI_REQUEST_FAILED" }, { status: result.status === 429 ? 429 : 502 });
     }
     const reply = result.reply;
     if (!reply) return NextResponse.json({ error: "AI_EMPTY_RESPONSE" }, { status: 502 });
+    if (containsLikelyPersonalData(reply)) {
+      return NextResponse.json({ reply: "Let's stay with the lesson and avoid private information. What would you say in this situation?", provider: ai.provider });
+    }
     if (ai.provider === "nvidia" && await isFlaggedByNvidia(ai.apiKey, parsed.data.message, reply)) {
       return NextResponse.json({ reply: "Let's stay with this English lesson. Please try one short sentence from the unit." });
     }
@@ -173,7 +219,7 @@ export async function POST(request: Request) {
     await prisma.productEvent.create({
       data: { learnerProfileId: learner.id, name: "unit_ai_chat_turn", entityType: "Unit", entityId: unit.id },
     });
-    return NextResponse.json({ reply });
+    return NextResponse.json({ reply, provider: ai.provider });
   } catch {
     return NextResponse.json({ error: "AI_UNAVAILABLE" }, { status: 502 });
   }

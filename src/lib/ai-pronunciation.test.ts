@@ -16,7 +16,12 @@ describe("AI pronunciation feedback", () => {
 
   it("tells the model not to pretend it heard the audio", () => {
     const prompt = buildAiPronunciationPrompt({ target: "Good morning", transcript: "good money", score: 50, needsPractice: ["morning"] });
-    expect(prompt).toContain("You did not hear the audio");
+    expect(prompt).toContain("not reliable phoneme measurements");
     expect(prompt).toContain('"target":"Good morning"');
+  });
+
+  it("identifies Groq Whisper as the recognizer", () => {
+    const prompt = buildAiPronunciationPrompt({ target: "How are you?", transcript: "how are you", score: 100, needsPractice: [], recognizer: "groq-whisper" });
+    expect(prompt).toContain('"recognizer":"groq-whisper"');
   });
 });

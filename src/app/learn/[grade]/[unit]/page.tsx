@@ -35,9 +35,15 @@ export default async function UnitPage({ params }: { params: Promise<{ grade: st
     const phrase = typeof payload.target === "string" ? payload.target : typeof payload.front === "string" ? payload.front : "";
     return phrase ? [phrase] : [];
   }).filter((phrase, index, phrases) => phrases.indexOf(phrase) === index).slice(0, 3);
+  const scenarios = data.lessons.flatMap((lesson) => lesson.activities).flatMap((activity) => {
+    const payload = typeof activity.payload === "object" && activity.payload !== null && !Array.isArray(activity.payload) ? activity.payload as Record<string, unknown> : {};
+    return typeof payload.scenario === "string" && payload.scenario.trim()
+      ? [{ activityId: activity.id, title: activity.title, description: payload.scenario.trim() }]
+      : [];
+  }).filter((scenario, index, items) => items.findIndex((item) => item.description === scenario.description) === index).slice(0, 3);
   return <main className="min-h-screen bg-[#f5f8f5] text-[#163129]"><header className="border-b bg-white"><div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2.5"><Link href="/dashboard" className="font-black">← Bảng học</Link><Link href="/review" className="text-sm font-bold">Ôn tập</Link></div></header><div className="mx-auto max-w-6xl px-4 py-3"><section className="grid overflow-hidden rounded-2xl bg-emerald-900 text-white md:grid-cols-[1fr_220px]"><div className="p-4"><p className="text-[11px] font-black uppercase tracking-wider text-emerald-300">{data.course.grade.name} · Unit {data.order} · {data.theme}</p><div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1"><h1 className="text-2xl font-black">{data.title}</h1><p className="text-xs font-bold">{data.lessons.length} lesson · khoảng {data.lessons.reduce((sum, lesson) => sum + lesson.estimatedMinutes, 0)} phút</p></div><p className="mt-1.5 max-w-2xl text-sm leading-5 text-emerald-50/80">{data.description}</p></div><div className="relative hidden min-h-28 md:block">{data.imageUrl && <Image src={data.imageUrl} alt={`Hình minh họa ${data.theme}`} fill sizes="220px" className="object-cover" priority/>}</div></section>
     <UnitNavigator gradeName={data.course.grade.name} gradeSlug={data.course.grade.slug} units={data.course.units.map(({ id, slug, order, title, theme }) => ({ id, slug, order, title, theme }))} currentUnitId={data.id}/>
-    <LessonPlayer lessons={serialized} completionHref={completionHref} completionLabel={completionLabel} initialActivityIndex={initialActivityIndex} hasSavedProgress={latestIndex >= 0}/>
-    <UnitAiChat unitId={data.id} unitTitle={data.title} unitTheme={data.theme} starters={starters} configured={Boolean(process.env.NVIDIA_API_KEY || process.env.OPENAI_API_KEY)}/>
+    <LessonPlayer lessons={serialized} completionHref={completionHref} completionLabel={completionLabel} initialActivityIndex={initialActivityIndex} hasSavedProgress={latestIndex >= 0} voiceConfigured={Boolean(process.env.GROQ_API_KEY)}/>
+    <UnitAiChat unitId={data.id} unitTitle={data.title} unitTheme={data.theme} starters={starters} scenarios={scenarios} configured={Boolean(process.env.GROQ_API_KEY || process.env.NVIDIA_API_KEY || process.env.OPENAI_API_KEY)} voiceConfigured={Boolean(process.env.GROQ_API_KEY)}/>
   </div></main>;
 }
