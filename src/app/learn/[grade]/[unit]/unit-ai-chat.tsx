@@ -30,7 +30,7 @@ export default function UnitAiChat({
   const [pending, setPending] = useState(false);
   const [listening, setListening] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(true);
   const [activeScenarioId, setActiveScenarioId] = useState<string | undefined>();
   const [error, setError] = useState("");
   const recordingRef = useRef<ShortAudioRecording | null>(null);
