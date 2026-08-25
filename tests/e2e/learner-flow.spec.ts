@@ -4,12 +4,12 @@ test.describe("learner pilot flow", () => {
   test.skip(!process.env.E2E_DATABASE_READY, "Requires an isolated PostgreSQL database with seeded curriculum.");
   test("parent can register and reach the learner dashboard", async ({ page }) => {
     await page.goto("/register");
-    await page.getByLabel("Email").fill(`pilot-${Date.now()}@example.test`);
-    await page.getByLabel("Mật khẩu").fill("Pilot123!");
-    await page.getByLabel("Tên học sinh").fill("An");
+    const login = `pilot-${Date.now()}`;
+    await page.getByLabel("Tên đăng nhập").fill(login);
+    await page.getByLabel("Mật khẩu").fill("1234");
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Tạo tài khoản" }).click();
     await expect(page).toHaveURL(/dashboard/);
-    await expect(page.getByRole("heading", { name: /Xin chào, An/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: new RegExp(`Xin chào, ${login}`) })).toBeVisible();
   });
 });

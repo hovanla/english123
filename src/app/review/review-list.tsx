@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import MatchingActivity from "@/components/matching-activity";
 
 type Item = { id: string; dueAt: string; activity: { id: string; type: string; title: string; instruction: string; payload: Record<string, unknown> } };
 function formatDueAt(value: string) { return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
@@ -14,6 +15,9 @@ export default function ReviewList() {
   async function complete(currentAnswer = answer) { const response = await fetch("/api/review", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: item.id, answer: currentAnswer }) }); const data = await response.json(); if (!response.ok) { setMessage("Chưa lưu được kết quả. Em thử lại nhé."); return; } setMessage(data.passed ? `Chính xác · ${data.score} điểm. Đã hẹn lần ôn tiếp theo.` : "Đã ghi nhận ‘Chưa nhớ’. Em sẽ học lại mục này sau 10 phút."); setTimeout(() => { setMessage(""); setAnswer({}); setRevealed(false); void load(); }, 1000); }
   function defaultAnswer() { if (item.activity.type === "SPEAK_REPEAT") return { unsupported: true, confirmed: true }; return answer; }
   const pairs = (payload.pairs || []) as Array<{ left: string; right: string }>;
+  const answerReady = item.activity.type === "MATCHING"
+    ? ((answer.pairs || []) as Array<{ left: string; right: string }>).length === pairs.length
+    : Object.keys(answer).length > 0 || item.activity.type === "SPEAK_REPEAT";
   const hiddenGuess = item.activity.type === "FLASHCARD" && ["AUDIO_GUESS", "VISUAL_GUESS"].includes(String(payload.mode));
   const responseRecall = item.activity.type === "SENTENCE" && payload.mode === "RESPONSE_RECALL";
   return <article className="mt-5 rounded-3xl bg-white p-7 shadow-sm"><p className="text-xs font-black uppercase tracking-wider text-emerald-700">Còn {items.length} mục</p><h2 className="mt-3 text-3xl font-black">{item.activity.title}</h2><p className="mt-2 text-slate-600">{item.activity.instruction}</p>
@@ -25,8 +29,15 @@ export default function ReviewList() {
       {!revealed ? <button type="button" onClick={() => setRevealed(true)} className="mt-3 rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-black text-amber-800">Cần gợi ý tình huống?</button> : <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-950">{String(payload.scenario)}</p>}
     </div>}
     {["LISTEN_TYPE", "SENTENCE"].includes(item.activity.type) && <input className="mt-5 w-full rounded-xl border p-3" placeholder={responseRecall ? "Gõ cả cụm tiếng Anh em sẽ nói…" : "Nhập câu tiếng Anh"} autoComplete="off" value={String(answer.text || "")} onChange={(event) => setAnswer({ text: event.target.value })}/>}
-    {item.activity.type === "MATCHING" && <div className="mt-5 space-y-2">{pairs.map((pair) => <label className="grid gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-2" key={pair.left}><strong>{pair.left}</strong><select className="rounded-lg border bg-white p-2" onChange={(event) => { const current = (answer.pairs || []) as Array<{ left: string; right: string }>; setAnswer({ pairs: [...current.filter((value) => value.left !== pair.left), { left: pair.left, right: event.target.value }] }); }}><option value="">Chọn nghĩa</option>{pairs.map((value) => <option key={value.right}>{value.right}</option>)}</select></label>)}</div>}
+    {item.activity.type === "MATCHING" && <MatchingActivity
+      pairs={pairs}
+      selectedPairs={(answer.pairs || []) as Array<{ left: string; right: string }>}
+      onChange={(left, right) => {
+        const current = (answer.pairs || []) as Array<{ left: string; right: string }>;
+        setAnswer({ pairs: [...current.filter((value) => value.left !== left), ...(right ? [{ left, right }] : [])] });
+      }}
+    />}
     {item.activity.type === "SHORT_WRITING" && <textarea className="mt-5 min-h-32 w-full rounded-xl border p-3" value={String(answer.text || "")} onChange={(event) => setAnswer({ text: event.target.value })}/>} 
-    {message && <p className="mt-4 rounded-xl bg-emerald-50 p-3 font-bold">{message}</p>}{item.activity.type !== "FLASHCARD" && <button onClick={() => { const current = Object.keys(answer).length ? answer : defaultAnswer(); setAnswer(current); void complete(current); }} className="mt-5 rounded-xl bg-emerald-700 px-5 py-3 font-black text-white">Kiểm tra và hẹn lần tiếp</button>}
+    {message && <p className="mt-4 rounded-xl bg-emerald-50 p-3 font-bold">{message}</p>}{item.activity.type !== "FLASHCARD" && <button disabled={!answerReady} onClick={() => { const current = Object.keys(answer).length ? answer : defaultAnswer(); setAnswer(current); void complete(current); }} className="mt-5 rounded-xl bg-emerald-700 px-5 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">Kiểm tra và hẹn lần tiếp</button>}
   </article>;
 }

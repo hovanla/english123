@@ -5,10 +5,11 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { loginIdentifierSchema, MIN_PASSWORD_LENGTH } from "@/lib/login-identifier";
 
 const credentialsSchema = z.object({
-  email: z.string().email().transform((value) => value.toLowerCase().trim()),
-  password: z.string().min(8).max(128),
+  login: loginIdentifierSchema,
+  password: z.string().min(MIN_PASSWORD_LENGTH).max(128),
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -19,13 +20,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
+        login: { label: "Tên đăng nhập hoặc email", type: "text" },
         password: { label: "Mật khẩu", type: "password" },
       },
       async authorize(rawCredentials) {
         const parsed = credentialsSchema.safeParse(rawCredentials);
         if (!parsed.success) return null;
-        const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+        const user = await prisma.user.findUnique({ where: { email: parsed.data.login } });
         if (!user?.passwordHash || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) return null;
         return { id: user.id, email: user.email, name: user.name, role: user.role, sessionVersion: user.sessionVersion };
       },

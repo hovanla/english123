@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { speakEnglish, startEnglishRecognition } from "@/lib/browser-speech";
 import { assessPronunciation } from "@/lib/pronunciation";
+import MatchingActivity from "@/components/matching-activity";
 
 type Activity = { id: string; type: string; title: string; instruction: string; payload: Record<string, unknown>; order: number };
 type Lesson = { id: string; title: string; description: string; estimatedMinutes: number; activities: Activity[] };
@@ -71,6 +72,9 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
   const canShowImageHint = isVisualGuess || isResponseRecall;
   const imageHint = String(payload.imageHint || payload.imageAlt || "Quan sát nhân vật, đồ vật và hành động chính trong ảnh.");
   const progress = ((index + (result?.passed ? 1 : 0)) / activities.length) * 100;
+  const answerReady = activity.type === "MATCHING"
+    ? ((answer.pairs || []) as Array<{ left: string; right: string }>).length === pairs.length
+    : Object.keys(answer).length > 0;
 
   function resetActivity(nextIndex: number) {
     setIndex(nextIndex);
@@ -211,7 +215,14 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
 
         {(activity.type === "MULTIPLE_CHOICE" || activity.type === "LISTEN_CHOOSE") && <div className="mt-4 grid gap-2">{options.map((option, optionIndex) => <button type="button" onClick={() => setAnswer({ optionId: option.id })} key={option.id} className={`min-h-12 rounded-xl border p-3 text-left text-sm font-bold transition ${answer.optionId === option.id ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`}><span className="mr-2 inline-grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-[11px]">{String.fromCharCode(65 + optionIndex)}</span>{option.text}</button>)}</div>}
 
-        {activity.type === "MATCHING" && <div className="mt-5 space-y-3">{pairs.map((pair) => <label key={pair.left} className="grid items-center gap-3 rounded-2xl bg-slate-50 p-3 sm:grid-cols-2"><strong>{pair.left}</strong><select className="rounded-xl border bg-white p-2" onChange={(event) => { const current = (answer.pairs || []) as Array<{ left: string; right: string }>; setAnswer({ pairs: [...current.filter((item) => item.left !== pair.left), { left: pair.left, right: event.target.value }] }); }}><option value="">Chọn nghĩa</option>{pairs.map((item) => <option key={item.right}>{item.right}</option>)}</select></label>)}</div>}
+        {activity.type === "MATCHING" && <MatchingActivity
+          pairs={pairs}
+          selectedPairs={(answer.pairs || []) as Array<{ left: string; right: string }>}
+          onChange={(left, right) => {
+            const current = (answer.pairs || []) as Array<{ left: string; right: string }>;
+            setAnswer({ pairs: [...current.filter((item) => item.left !== left), ...(right ? [{ left, right }] : [])] });
+          }}
+        />}
 
         {isResponseRecall && <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-sky-50 p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -298,7 +309,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
           {result.passed && index < activities.length - 1 && <button type="button" onClick={() => resetActivity(index + 1)} className="mt-3 rounded-xl bg-emerald-700 px-4 py-2.5 font-black text-white">Phản xạ tiếp theo →</button>}
           {result.passed && index === activities.length - 1 && <Link href={completionHref} className="mt-3 inline-block rounded-xl bg-emerald-700 px-4 py-2.5 font-black text-white">{completionLabel}</Link>}
           {!result.passed && <button type="button" onClick={() => { setResult(null); setAnswer({}); setRevealed(false); setHintVisible(false); setImageHintVisible(false); setPronunciationFeedback(null); setSpeechError(""); }} className="mt-3 rounded-xl bg-amber-500 px-4 py-2.5 font-black">{isResponseRecall ? "Tự tạo câu lại" : "Nghe và đoán lại"}</button>}
-        </div> : activity.type !== "FLASHCARD" && <button type="button" disabled={pending || Object.keys(answer).length === 0} onClick={() => void submit()} className="mt-4 min-h-12 rounded-xl bg-emerald-700 px-5 py-2.5 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{pending ? "Đang kiểm tra…" : "Kiểm tra phản xạ"}</button>}
+        </div> : activity.type !== "FLASHCARD" && <button type="button" disabled={pending || !answerReady} onClick={() => void submit()} className="mt-4 min-h-12 rounded-xl bg-emerald-700 px-5 py-2.5 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{pending ? "Đang kiểm tra…" : "Kiểm tra phản xạ"}</button>}
       </div>
     </article>
   </section>;
