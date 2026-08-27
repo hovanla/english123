@@ -1,3 +1,7 @@
+export function vocabularyDefinitionKey(word: string, vietnameseMeaning: string) {
+  return `${word.normalize("NFKC").trim().toLowerCase()}\u241f${vietnameseMeaning.normalize("NFKC").trim().toLowerCase()}`;
+}
+
 export function buildWordDefinitionPrompt(word: string, vietnameseMeaning: string) {
   return `Write exactly one learner-friendly English dictionary definition for the vocabulary below.
 

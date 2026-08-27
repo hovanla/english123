@@ -5,6 +5,7 @@ import { auth } from "../../../../../auth";
 import { getPublishedUnit } from "@/lib/curriculum";
 import { getActiveLearner } from "@/lib/learner";
 import { prisma } from "@/lib/prisma";
+import { getVocabularyDefinition } from "@/lib/vocabulary-dictionary";
 import LessonPlayer from "./lesson-player";
 import UnitAiChat from "./unit-ai-chat";
 import UnitNavigator from "./unit-navigator";
@@ -26,6 +27,15 @@ export default async function UnitPage({ params }: { params: Promise<{ grade: st
   const shouldAdvance = eventMetadata.passed === true || latestActivity?.type === "FLASHCARD";
   const initialActivityIndex = latestIndex < 0 ? 0 : Math.min(latestIndex + (shouldAdvance ? 1 : 0), Math.max(unitActivities.length - 1, 0));
   const serialized = JSON.parse(JSON.stringify(data.lessons));
+  for (const lesson of serialized as Array<{ activities: Array<{ type: string; payload: Record<string, unknown> }> }>) {
+    for (const activity of lesson.activities) {
+      if (activity.type !== "FLASHCARD" || activity.payload.definition) continue;
+      const word = typeof activity.payload.front === "string" ? activity.payload.front : "";
+      const meaning = typeof activity.payload.back === "string" ? activity.payload.back : "";
+      const definition = word && meaning ? getVocabularyDefinition(word, meaning) : "";
+      if (definition) activity.payload.definition = definition;
+    }
+  }
   const currentUnitIndex = data.course.units.findIndex((item) => item.id === data.id);
   const nextUnit = data.course.units[currentUnitIndex + 1];
   const completionHref = nextUnit ? `/learn/${data.course.grade.slug}/${nextUnit.slug}` : "/dashboard";

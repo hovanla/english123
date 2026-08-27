@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requestGroqChat } from "@/lib/groq";
 import { getActiveLearner } from "@/lib/learner";
+import { getVocabularyDefinition } from "@/lib/vocabulary-dictionary";
 import { buildWordDefinitionPrompt, extractPublicDictionaryDefinition, normalizeWordDefinition } from "@/lib/word-definition";
 
 export const runtime = "nodejs";
@@ -19,6 +20,8 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "INVALID_INPUT" }, { status: 400 });
 
   const cacheKey = `${parsed.data.word.toLowerCase()}\u0000${parsed.data.meaning.toLowerCase()}`;
+  const curated = getVocabularyDefinition(parsed.data.word, parsed.data.meaning);
+  if (curated) return NextResponse.json({ definition: curated, source: "curated" });
   const cached = definitionCache.get(cacheKey);
   if (cached) return NextResponse.json({ definition: cached, cached: true });
 
