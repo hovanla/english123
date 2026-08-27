@@ -21,6 +21,41 @@ type PronunciationFeedback = ReturnType<typeof assessPronunciation> & {
   source?: "groq" | "nvidia" | "openai" | "local";
 };
 
+const wordDefinitionCache = new Map<string, string>();
+const wordDefinitionRequests = new Map<string, Promise<string>>();
+
+async function loadWordDefinition(word: string, meaning: string) {
+  const key = `${word.toLowerCase()}\u0000${meaning.toLowerCase()}`;
+  const cached = wordDefinitionCache.get(key);
+  if (cached) return cached;
+  const existing = wordDefinitionRequests.get(key);
+  if (existing) return existing;
+
+  const request = fetch("/api/ai/word-definition", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ word, meaning }),
+  }).then(async (response) => {
+    const payload = await response.json().catch(() => null) as { definition?: string } | null;
+    if (!response.ok || !payload?.definition) throw new Error("DICTIONARY_UNAVAILABLE");
+    wordDefinitionCache.set(key, payload.definition);
+    return payload.definition;
+  }).finally(() => wordDefinitionRequests.delete(key));
+
+  wordDefinitionRequests.set(key, request);
+  return request;
+}
+
+function EnglishDefinitionCard({ definition, pending, error }: { definition: string; pending: boolean; error: string }) {
+  if (pending) return <div aria-live="polite" className="mx-auto mt-3 max-w-xl rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-left text-sm font-bold text-indigo-800">Đang mở từ điển Anh–Anh…</div>;
+  if (!definition) return error ? <p className="mt-2 text-xs font-bold text-slate-500">Từ điển Anh–Anh đang tạm bận. Em có thể thử lại ở lần ôn sau.</p> : null;
+  return <div className="mx-auto mt-3 max-w-xl rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-left">
+    <p className="text-[10px] font-black uppercase tracking-wider text-indigo-700">English definition</p>
+    <p className="mt-1 text-sm font-bold leading-6 text-indigo-950">{definition}</p>
+    <button type="button" onClick={() => speakEnglish(definition)} className="mt-2 min-h-9 rounded-lg bg-white px-3 py-1.5 text-xs font-black text-indigo-800 shadow-sm">🔊 Listen to the definition</button>
+  </div>;
+}
+
 function PronunciationFeedbackCard({ feedback, pending }: { feedback: PronunciationFeedback | null; pending: boolean }) {
   if (!feedback && !pending) return null;
   if (!feedback) return <div aria-live="polite" className="mt-3 rounded-xl border border-purple-200 bg-white p-3 text-sm font-bold text-purple-900">AI đang phân tích câu em vừa nói…</div>;
@@ -70,9 +105,18 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
   const [pronunciationPending, setPronunciationPending] = useState(false);
   const [recording, setRecording] = useState(false);
   const [speechError, setSpeechError] = useState("");
+  const [englishDefinition, setEnglishDefinition] = useState("");
+  const [definitionError, setDefinitionError] = useState("");
   const recordingRef = useRef<ShortAudioRecording | null>(null);
   const activity = activities[index];
   const isResponseRecall = activity?.type === "SENTENCE" && activity.payload.mode === "RESPONSE_RECALL";
+  const vocabularyWord = activity?.type === "FLASHCARD" ? String(activity.payload.front || "") : "";
+  const vocabularyMeaning = activity?.type === "FLASHCARD" ? String(activity.payload.back || "") : "";
+  const staticDefinition = activity?.type === "FLASHCARD" ? String(activity.payload.definition || "") : "";
+  const vocabularyIsHidden = activity?.type === "FLASHCARD" && (activity.payload.mode === "VISUAL_GUESS" || activity.payload.mode === "AUDIO_GUESS");
+  const definitionEligible = Boolean(vocabularyWord && vocabularyMeaning && (!vocabularyIsHidden || revealed));
+  const displayedDefinition = staticDefinition || englishDefinition;
+  const definitionPending = definitionEligible && !displayedDefinition && !definitionError;
 
   useEffect(() => {
     if (!isResponseRecall) return;
@@ -89,6 +133,16 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
   }, [activity?.id, isResponseRecall]);
 
   useEffect(() => () => recordingRef.current?.cancel(), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!definitionEligible || staticDefinition) return;
+
+    void loadWordDefinition(vocabularyWord, vocabularyMeaning)
+      .then((definition) => { if (!cancelled) setEnglishDefinition(definition); })
+      .catch(() => { if (!cancelled) setDefinitionError("DICTIONARY_UNAVAILABLE"); });
+    return () => { cancelled = true; };
+  }, [definitionEligible, staticDefinition, vocabularyMeaning, vocabularyWord]);
 
   if (!activity) return <p className="mt-6 rounded-2xl bg-white p-5">Unit này chưa có hoạt động.</p>;
 
@@ -123,6 +177,8 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
     setPronunciationFeedback(null);
     setPronunciationPending(false);
     setSpeechError("");
+    setEnglishDefinition("");
+    setDefinitionError("");
   }
 
   async function submit(submittedAnswer = answer) {
@@ -286,6 +342,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
               </> : <>
                 <p className="text-2xl font-black text-slate-950">{String(payload.front)}</p>
                 <p className="mt-1 text-base font-bold text-amber-900">{String(payload.back)}</p>
+                <EnglishDefinitionCard definition={displayedDefinition} pending={definitionPending} error={definitionError}/>
                 {Boolean(payload.example) && <p className="mt-1 text-xs text-slate-600">{String(payload.example)}</p>}
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
                   <button type="button" onClick={() => speakEnglish(String(payload.audioText || payload.front || ""))} className="min-h-11 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900">🔊 Nghe lại</button>
@@ -318,6 +375,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
             {Boolean(payload.visual) && <div className="text-5xl" aria-hidden="true">{String(payload.visual)}</div>}
             <p className="mt-2 text-3xl font-black text-slate-950">{String(payload.front)}</p>
             <p className="mt-1 text-lg font-bold text-amber-900">{String(payload.back)}</p>
+            <EnglishDefinitionCard definition={displayedDefinition} pending={definitionPending} error={definitionError}/>
             {Boolean(payload.example) && <p className="mt-2 text-sm text-slate-600">{String(payload.example)}</p>}
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               <button type="button" onClick={() => speakEnglish(String(payload.audioText || payload.front || ""))} className="min-h-11 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900">🔊 Nghe lại</button>

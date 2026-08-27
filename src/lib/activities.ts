@@ -20,7 +20,7 @@ const basePrompt = {
 };
 
 export const activityPayloadSchemas = {
-  FLASHCARD: z.object({ ...basePrompt, front: z.string().min(1), back: z.string().min(1), example: z.string().optional() }),
+  FLASHCARD: z.object({ ...basePrompt, front: z.string().min(1), back: z.string().min(1), example: z.string().optional(), definition: z.string().min(1).max(300).optional() }),
   MULTIPLE_CHOICE: z.object({ ...basePrompt, options: z.array(optionSchema).min(2).max(6), correctOptionId: z.string().min(1) }),
   MATCHING: z.object({ ...basePrompt, pairs: z.array(z.object({ left: z.string().min(1), right: z.string().min(1) })).min(2).max(8) }),
   LISTEN_CHOOSE: z.object({ ...basePrompt, text: z.string().min(1), options: z.array(optionSchema).min(2).max(6), correctOptionId: z.string().min(1) }),
