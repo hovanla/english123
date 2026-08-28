@@ -50,7 +50,7 @@ function EnglishDefinitionCard({ definition, pending, error }: { definition: str
   if (pending) return <div aria-live="polite" className="mx-auto mt-3 max-w-xl rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-left text-sm font-bold text-indigo-800">Đang mở từ điển Anh–Anh…</div>;
   if (!definition) return error ? <p className="mt-2 text-xs font-bold text-slate-500">Mục từ này chưa có định nghĩa Anh–Anh phù hợp.</p> : null;
   return <div className="mx-auto mt-3 max-w-xl rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-left">
-    <p className="text-[10px] font-black uppercase tracking-wider text-indigo-700">English definition</p>
+    <p className="text-[10px] font-black uppercase tracking-wider text-indigo-700">Gợi ý Anh–Anh</p>
     <p className="mt-1 text-sm font-bold leading-6 text-indigo-950">{definition}</p>
     <button type="button" onClick={() => speakEnglish(definition)} className="mt-2 min-h-9 rounded-lg bg-white px-3 py-1.5 text-xs font-black text-indigo-800 shadow-sm">🔊 Listen to the definition</button>
   </div>;
@@ -113,8 +113,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
   const vocabularyWord = activity?.type === "FLASHCARD" ? String(activity.payload.front || "") : "";
   const vocabularyMeaning = activity?.type === "FLASHCARD" ? String(activity.payload.back || "") : "";
   const staticDefinition = activity?.type === "FLASHCARD" ? String(activity.payload.definition || "") : "";
-  const vocabularyIsHidden = activity?.type === "FLASHCARD" && (activity.payload.mode === "VISUAL_GUESS" || activity.payload.mode === "AUDIO_GUESS");
-  const definitionEligible = Boolean(vocabularyWord && vocabularyMeaning && (!vocabularyIsHidden || revealed));
+  const definitionEligible = Boolean(vocabularyWord && vocabularyMeaning);
   const displayedDefinition = staticDefinition || englishDefinition;
   const definitionPending = definitionEligible && !displayedDefinition && !definitionError;
 
@@ -335,6 +334,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
                 <button type="button" onClick={() => setImageHintVisible(false)} className="mt-2 text-xs font-black text-sky-800 underline">Ẩn gợi ý</button>
               </div>}
             </div>}
+            {isHiddenGuess && <EnglishDefinitionCard definition={displayedDefinition} pending={definitionPending} error={definitionError}/>}
             {isHiddenGuess && <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center">
               {!revealed ? <>
                 <div className="flex flex-wrap justify-center gap-2"><button type="button" onClick={() => speakEnglish(String(payload.audioText || payload.front || ""))} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900 hover:bg-sky-200"><span className="text-lg">🔊</span> {isAudioGuess ? "Nghe câu" : "Nghe từ"}</button><button type="button" onClick={() => setRevealed(true)} className="min-h-11 rounded-xl bg-amber-500 px-5 py-2 font-black text-amber-950 hover:bg-amber-400">Xem đáp án</button></div>
@@ -342,7 +342,6 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
               </> : <>
                 <p className="text-2xl font-black text-slate-950">{String(payload.front)}</p>
                 <p className="mt-1 text-base font-bold text-amber-900">{String(payload.back)}</p>
-                <EnglishDefinitionCard definition={displayedDefinition} pending={definitionPending} error={definitionError}/>
                 {Boolean(payload.example) && <p className="mt-1 text-xs text-slate-600">{String(payload.example)}</p>}
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
                   <button type="button" onClick={() => speakEnglish(String(payload.audioText || payload.front || ""))} className="min-h-11 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900">🔊 Nghe lại</button>
@@ -361,6 +360,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
         {(activity.type === "LISTEN_CHOOSE" || activity.type === "LISTEN_TYPE") && <div className="mt-6 text-center"><button type="button" onClick={() => speakEnglish(String(payload.text || ""))} className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-sky-100 px-6 py-3 font-black text-sky-900 hover:bg-sky-200"><span className="text-2xl">🔊</span> Nghe lại</button><p className="mt-2 text-xs font-bold text-slate-500">Từ tiếng Anh được giấu để em luyện nghe thật</p></div>}
 
         {activity.type === "FLASHCARD" && !(imageUrl && isHiddenGuess) && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
+          <EnglishDefinitionCard definition={displayedDefinition} pending={definitionPending} error={definitionError}/>
           {isHiddenGuess && !revealed ? <>
             {isAudioGuess ? <>
               <div className="text-5xl" aria-hidden="true">🎧</div>
@@ -375,7 +375,6 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
             {Boolean(payload.visual) && <div className="text-5xl" aria-hidden="true">{String(payload.visual)}</div>}
             <p className="mt-2 text-3xl font-black text-slate-950">{String(payload.front)}</p>
             <p className="mt-1 text-lg font-bold text-amber-900">{String(payload.back)}</p>
-            <EnglishDefinitionCard definition={displayedDefinition} pending={definitionPending} error={definitionError}/>
             {Boolean(payload.example) && <p className="mt-2 text-sm text-slate-600">{String(payload.example)}</p>}
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               <button type="button" onClick={() => speakEnglish(String(payload.audioText || payload.front || ""))} className="min-h-11 rounded-xl bg-sky-100 px-4 py-2 font-black text-sky-900">🔊 Nghe lại</button>
