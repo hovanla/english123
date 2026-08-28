@@ -20,6 +20,20 @@ describe("curated vocabulary dictionary", () => {
       .toBe(getVocabularyDefinition("book", "quyển sách"));
   });
 
+  it("accepts harmless punctuation and explanatory labels from stored lesson data", () => {
+    expect(getVocabularyDefinition("book", "quyển sách (danh từ)."))
+      .toBe(getVocabularyDefinition("book", "quyển sách"));
+  });
+
+  it("uses the only available sense when a unique word has an older translated label", () => {
+    expect(getVocabularyDefinition("tomato", "trái cà chua"))
+      .toBe("A red fruit that is used in salads.");
+  });
+
+  it("does not guess when an unknown label belongs to a word with several senses", () => {
+    expect(getVocabularyDefinition("book", "nghĩa không xác định")).toBe("");
+  });
+
   it("returns an empty string for a vocabulary sense that is not curated", () => {
     expect(getVocabularyDefinition("not-a-real-entry", "không tồn tại")).toBe("");
   });

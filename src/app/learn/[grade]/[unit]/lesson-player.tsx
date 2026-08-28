@@ -48,7 +48,7 @@ async function loadWordDefinition(word: string, meaning: string) {
 
 function EnglishDefinitionCard({ definition, pending, error }: { definition: string; pending: boolean; error: string }) {
   if (pending) return <div aria-live="polite" className="mx-auto mt-3 max-w-xl rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-left text-sm font-bold text-indigo-800">Đang mở từ điển Anh–Anh…</div>;
-  if (!definition) return error ? <p className="mt-2 text-xs font-bold text-slate-500">Từ điển Anh–Anh đang tạm bận. Em có thể thử lại ở lần ôn sau.</p> : null;
+  if (!definition) return error ? <p className="mt-2 text-xs font-bold text-slate-500">Mục từ này chưa có định nghĩa Anh–Anh phù hợp.</p> : null;
   return <div className="mx-auto mt-3 max-w-xl rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-left">
     <p className="text-[10px] font-black uppercase tracking-wider text-indigo-700">English definition</p>
     <p className="mt-1 text-sm font-bold leading-6 text-indigo-950">{definition}</p>
