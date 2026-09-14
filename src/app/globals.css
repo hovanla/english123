@@ -306,6 +306,70 @@ select {
   line-height: 1.6;
 }
 
+.matching-celebration {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.matching-firework {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 1px;
+  height: 1px;
+}
+
+.matching-firework-particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--firework-color);
+  box-shadow: 0 0 8px var(--firework-color);
+  animation: matching-firework-burst 760ms cubic-bezier(.2,.7,.25,1) var(--firework-delay) both;
+}
+
+.matching-celebration-complete .matching-firework {
+  transform: scale(1.35);
+}
+
+.matching-celebration-complete::after {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .94);
+  color: #047857;
+  content: "Hoàn thành! 🎉";
+  padding: 9px 15px;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 10px 30px rgba(4, 120, 87, .22);
+  animation: matching-success-pop 1.35s ease both;
+}
+
+@keyframes matching-firework-burst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+  12% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--firework-x)), calc(-50% + var(--firework-y))) scale(.1); }
+}
+
+@keyframes matching-success-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.7); }
+  18%, 72% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -70%) scale(.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .matching-firework-particle { display: none; }
+  .matching-celebration-complete::after { animation: none; opacity: 1; transform: translate(-50%, -50%); }
+}
+
 @media (min-width: 768px) {
   .lesson-hero-media {
     height: auto;
