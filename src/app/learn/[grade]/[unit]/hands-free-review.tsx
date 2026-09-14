@@ -51,11 +51,6 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
   function start() {
     if (!("speechSynthesis" in window)) { setMessage("Thiết bị chưa hỗ trợ đọc văn bản. Hãy thử trình duyệt khác."); return; }
     if (!available.length) return;
-    const voices = window.speechSynthesis.getVoices();
-    const languages = new Set(available.flatMap((entry) => [entry.promptLang.slice(0, 2), entry.answerLang.slice(0, 2)]));
-    if (voices.length && [...languages].some((lang) => !voices.some((voice) => voice.lang.toLowerCase().startsWith(lang)))) {
-      setMessage("Thiết bị cần có cả giọng đọc tiếng Anh và tiếng Việt cho kiểu ôn này. Hãy cài thêm giọng đọc trong cài đặt thiết bị."); return;
-    }
     stopAudio();
     const shuffled = [...available];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -105,7 +100,9 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
       utterance.lang = phase === "answer" ? item.answerLang : item.promptLang;
       utterance.rate = 0.82;
       const voices = window.speechSynthesis.getVoices();
-      const voice = voices.find((v) => v.lang.toLowerCase() === utterance.lang.toLowerCase()) || voices.find((v) => v.lang.slice(0, 2) === utterance.lang.slice(0, 2));
+      const language = utterance.lang.toLowerCase();
+      const voice = voices.find((v) => v.lang.toLowerCase() === language)
+        || voices.find((v) => v.lang.toLowerCase().startsWith(language.slice(0, 2)));
       if (voice) utterance.voice = voice;
       utterance.onend = () => {
         if (!valid()) return;
@@ -118,6 +115,7 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
         setPlaying(false); setMessage("Giọng đọc bị ngắt. Bấm Tiếp tục để nghe lại đoạn này.");
       };
       utteranceRef.current = utterance;
+      window.speechSynthesis.resume();
       window.speechSynthesis.speak(utterance);
     }
     return () => {
@@ -137,7 +135,7 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
         <label>Thời gian suy nghĩ<select value={delay} onChange={(e) => setDelay(Number(e.target.value))} className="mt-1 block w-full rounded-lg border p-2">{[3, 5, 8, 10].map((n) => <option key={n} value={n}>{n} giây</option>)}</select></label>
         <label>Nội dung<select value={weakOnly ? "weak" : "all"} onChange={(e) => setWeakOnly(e.target.value === "weak")} className="mt-1 block w-full rounded-lg border p-2"><option value="all">Cả Unit</option><option value="weak">Mục chưa nhớ</option></select></label>
       </div>
-      <p className="text-xs text-slate-600">{available.length} mục · Xáo thứ tự · Giữ trang mở và màn hình sáng khi nghe. Kết quả chỉ lưu trên thiết bị này.</p>
+      <p className="text-xs text-slate-600">{available.length} mục · Xáo thứ tự · Trình duyệt tự chọn giọng Anh/Việt phù hợp. Giữ trang mở và màn hình sáng khi nghe.</p>
       {!available.length && <p>Chưa có nội dung phù hợp với lựa chọn này. Hãy đổi cách ôn hoặc chọn cả Unit.</p>}
       <button type="button" disabled={!available.length} onClick={start} className="min-h-11 rounded-xl bg-emerald-700 px-5 font-bold text-white disabled:opacity-40">Bắt đầu nghe</button>
     </div>}
