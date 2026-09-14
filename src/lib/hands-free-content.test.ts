@@ -22,4 +22,10 @@ describe("hands-free lesson selection", () => {
     expect(buildListeningItems(activities, "meaning", ["b"])[0].id).toBe("b");
     expect(buildListeningItems(activities, "meaning", [])).toEqual([]);
   });
+  it("provides an English-only fallback when a curated definition exists", () => {
+    const items = buildListeningItems([
+      { id: "e", type: "FLASHCARD", payload: { front: "apple", back: "quả táo", definition: "A round fruit that grows on a tree." } },
+    ], "meaning");
+    expect(items[0].englishAnswer).toBe("A round fruit that grows on a tree.");
+  });
 });

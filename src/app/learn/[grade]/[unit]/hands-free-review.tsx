@@ -20,11 +20,27 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
   const [active, setActive] = useState(false);
   const [message, setMessage] = useState("");
   const [replay, setReplay] = useState(0);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [vietnameseVoiceUri, setVietnameseVoiceUri] = useState("");
   const generation = useRef(0);
   const completed = useRef(new Set<number>());
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const item = queue[index];
   const available = buildListeningItems(activities, mode, weakOnly ? weakIds : undefined);
+  const vietnameseVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("vi"));
+
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) return;
+    const loadVoices = () => {
+      const next = window.speechSynthesis.getVoices();
+      setVoices(next);
+      const vietnamese = next.filter((voice) => voice.lang.toLowerCase().startsWith("vi"));
+      setVietnameseVoiceUri((current) => current && vietnamese.some((voice) => voice.voiceURI === current) ? current : vietnamese[0]?.voiceURI || "");
+    };
+    loadVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+  }, []);
 
   function stopAudio() {
     generation.current += 1;
@@ -51,14 +67,31 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
   function start() {
     if (!("speechSynthesis" in window)) { setMessage("Thiết bị chưa hỗ trợ đọc văn bản. Hãy thử trình duyệt khác."); return; }
     if (!available.length) return;
+    let playable = [...available];
+    if (!vietnameseVoices.length) {
+      if (mode === "situation") {
+        setMessage("Thiết bị chưa có giọng tiếng Việt nên chưa thể đọc tình huống đúng. Hãy chọn cách ôn bằng tiếng Anh hoặc cài giọng Việt trong cài đặt giọng nói của thiết bị.");
+        return;
+      }
+      if (mode === "meaning") {
+        playable = playable
+          .filter((entry) => entry.englishAnswer)
+          .map((entry) => ({ ...entry, answer: entry.englishAnswer!, answerLang: "en-US" }));
+        if (!playable.length) {
+          setMessage("Thiết bị chưa có giọng tiếng Việt và các mục này chưa có giải thích Anh–Anh để thay thế.");
+          return;
+        }
+        setMessage("Thiết bị chưa có giọng Việt; phần đối chiếu sẽ dùng gợi ý Anh–Anh để tránh đọc tiếng Việt sai.");
+      }
+    }
     stopAudio();
-    const shuffled = [...available];
+    const shuffled = [...playable];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     completed.current.clear();
-    setQueue(shuffled); setIndex(0); setPhase("prompt"); setActive(true); setPlaying(true); setMessage("");
+    setQueue(shuffled); setIndex(0); setPhase("prompt"); setActive(true); setPlaying(true);
     try { localStorage.setItem("english123-listening-settings", JSON.stringify({ mode, delay, weakOnly })); } catch { /* Optional preference. */ }
   }
 
@@ -101,7 +134,9 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
       utterance.rate = 0.82;
       const voices = window.speechSynthesis.getVoices();
       const language = utterance.lang.toLowerCase();
-      const voice = voices.find((v) => v.lang.toLowerCase() === language)
+      const selectedVietnameseVoice = language.startsWith("vi") ? voices.find((voice) => voice.voiceURI === vietnameseVoiceUri) : undefined;
+      const voice = selectedVietnameseVoice
+        || voices.find((v) => v.lang.toLowerCase() === language)
         || voices.find((v) => v.lang.toLowerCase().startsWith(language.slice(0, 2)));
       if (voice) utterance.voice = voice;
       utterance.onend = () => {
@@ -123,7 +158,7 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
       clearTimeout(timer);
       window.speechSynthesis.cancel();
     };
-  }, [active, playing, item, phase, index, queue.length, delay, mode, unitId, replay]);
+  }, [active, playing, item, phase, index, queue.length, delay, mode, unitId, replay, vietnameseVoiceUri]);
 
   return <section className="mt-3 rounded-2xl border border-sky-200 bg-white p-3">
     <button type="button" onClick={showSettings} className="min-h-11 rounded-xl bg-sky-800 px-4 text-sm font-bold text-white">🎧 Ôn rảnh tay {open ? "▴" : "▾"}</button>
@@ -135,7 +170,9 @@ export default function HandsFreeReview({ unitId, activities, weakIds }: { unitI
         <label>Thời gian suy nghĩ<select value={delay} onChange={(e) => setDelay(Number(e.target.value))} className="mt-1 block w-full rounded-lg border p-2">{[3, 5, 8, 10].map((n) => <option key={n} value={n}>{n} giây</option>)}</select></label>
         <label>Nội dung<select value={weakOnly ? "weak" : "all"} onChange={(e) => setWeakOnly(e.target.value === "weak")} className="mt-1 block w-full rounded-lg border p-2"><option value="all">Cả Unit</option><option value="weak">Mục chưa nhớ</option></select></label>
       </div>
-      <p className="text-xs text-slate-600">{available.length} mục · Xáo thứ tự · Trình duyệt tự chọn giọng Anh/Việt phù hợp. Giữ trang mở và màn hình sáng khi nghe.</p>
+      {vietnameseVoices.length > 0 && <label className="block max-w-sm">Giọng đọc tiếng Việt<select value={vietnameseVoiceUri} onChange={(event) => setVietnameseVoiceUri(event.target.value)} className="mt-1 block w-full rounded-lg border p-2">{vietnameseVoices.map((voice) => <option key={voice.voiceURI} value={voice.voiceURI}>{voice.name} · {voice.lang}</option>)}</select></label>}
+      {vietnameseVoices.length === 0 && <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-900">Chưa tìm thấy giọng Việt trên thiết bị. Chế độ nhớ nghĩa sẽ dùng gợi ý Anh–Anh; chế độ đọc tình huống cần cài thêm giọng Việt.</p>}
+      <p className="text-xs text-slate-600">{available.length} mục · Xáo thứ tự · Giữ trang mở và màn hình sáng khi nghe.</p>
       {!available.length && <p>Chưa có nội dung phù hợp với lựa chọn này. Hãy đổi cách ôn hoặc chọn cả Unit.</p>}
       <button type="button" disabled={!available.length} onClick={start} className="min-h-11 rounded-xl bg-emerald-700 px-5 font-bold text-white disabled:opacity-40">Bắt đầu nghe</button>
     </div>}

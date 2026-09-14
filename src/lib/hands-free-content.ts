@@ -1,5 +1,5 @@
 export type ListeningMode = "meaning" | "situation" | "response";
-export type ListeningItem = { id: string; prompt: string; answer: string; promptLang: string; answerLang: string };
+export type ListeningItem = { id: string; prompt: string; answer: string; promptLang: string; answerLang: string; englishAnswer?: string };
 type Activity = { id: string; type: string; payload: Record<string, unknown> };
 
 export function buildListeningItems(activities: Activity[], mode: ListeningMode, weakIds?: string[]) {
@@ -16,6 +16,14 @@ export function buildListeningItems(activities: Activity[], mode: ListeningMode,
     const key = `${prompt}\u0000${answer}`;
     if (!prompt || !answer || seen.has(key)) return [];
     seen.add(key);
-    return [{ id: activity.id, prompt, answer, promptLang: mode === "situation" ? "vi-VN" : "en-US", answerLang: mode === "meaning" ? "vi-VN" : "en-US" }];
+    const definition = value("definition");
+    return [{
+      id: activity.id,
+      prompt,
+      answer,
+      promptLang: mode === "situation" ? "vi-VN" : "en-US",
+      answerLang: mode === "meaning" ? "vi-VN" : "en-US",
+      ...(mode === "meaning" && definition ? { englishAnswer: definition } : {}),
+    }];
   });
 }
