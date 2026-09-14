@@ -10,6 +10,7 @@ import { shuffleVocabularyActivities } from "@/lib/vocabulary-order";
 import LessonPlayer from "./lesson-player";
 import UnitAiChat from "./unit-ai-chat";
 import UnitNavigator from "./unit-navigator";
+import HandsFreeReview from "./hands-free-review";
 
 export const dynamic = "force-dynamic";
 export default async function UnitPage({ params }: { params: Promise<{ grade: string; unit: string }> }) {
@@ -17,6 +18,10 @@ export default async function UnitPage({ params }: { params: Promise<{ grade: st
   const { grade, unit } = await params; const data = await getPublishedUnit(grade, unit); if (!data) notFound();
   const learner = await getActiveLearner();
   const unitActivities = data.lessons.flatMap((lesson) => lesson.activities);
+  const weakReviews = await prisma.reviewSchedule.findMany({
+    where: { learnerProfileId: learner.id, activityId: { in: unitActivities.map((activity) => activity.id) }, lastScore: { lt: 70 } },
+    select: { activityId: true },
+  });
   const latestActivityEvent = await prisma.productEvent.findFirst({
     where: { learnerProfileId: learner.id, name: "activity_completed", entityId: { in: unitActivities.map((activity) => activity.id) } },
     select: { entityId: true, metadata: true },
@@ -64,6 +69,7 @@ export default async function UnitPage({ params }: { params: Promise<{ grade: st
   const groqConfigured = Boolean(process.env.GROQ_API_KEY || process.env.GROQ_API_KEYS);
   return <main className="min-h-screen bg-[#f5f8f5] text-[#163129]"><header className="border-b bg-white"><div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2.5"><Link href="/dashboard" className="font-black">← Bảng học</Link><Link href="/review" className="text-sm font-bold">Ôn tập</Link></div></header><div className="mx-auto max-w-6xl px-4 py-3"><section className="grid overflow-hidden rounded-2xl bg-emerald-900 text-white md:grid-cols-[1fr_220px]"><div className="p-4"><p className="text-[11px] font-black uppercase tracking-wider text-emerald-300">{data.course.grade.name} · Unit {data.order} · {data.theme}</p><div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1"><h1 className="text-2xl font-black">{data.title}</h1><p className="text-xs font-bold">{data.lessons.length} lesson · khoảng {data.lessons.reduce((sum, lesson) => sum + lesson.estimatedMinutes, 0)} phút</p></div><p className="mt-1.5 max-w-2xl text-sm leading-5 text-emerald-50/80">{data.description}</p></div><div className="relative hidden min-h-28 md:block">{data.imageUrl && <Image src={data.imageUrl} alt={`Hình minh họa ${data.theme}`} fill sizes="220px" className="object-cover" priority/>}</div></section>
     <UnitNavigator gradeName={data.course.grade.name} gradeSlug={data.course.grade.slug} units={data.course.units.map(({ id, slug, order, title, theme }) => ({ id, slug, order, title, theme }))} currentUnitId={data.id}/>
+    <HandsFreeReview key={data.id} unitId={data.id} activities={shuffledActivities} weakIds={weakReviews.map((review) => review.activityId)}/>
     <LessonPlayer lessons={shuffledLessons} completionHref={completionHref} completionLabel={completionLabel} initialActivityIndex={initialActivityIndex} hasSavedProgress={latestIndex >= 0} voiceConfigured={groqConfigured}/>
     <UnitAiChat unitId={data.id} unitTitle={data.title} unitTheme={data.theme} starters={starters} scenarios={scenarios} configured={Boolean(groqConfigured || process.env.NVIDIA_API_KEY || process.env.OPENAI_API_KEY)} voiceConfigured={groqConfigured}/>
   </div></main>;
