@@ -393,6 +393,7 @@ export default function LessonPlayer({ lessons, completionHref, completionLabel,
           pairs={pairs}
           selectedPairs={(answer.pairs || []) as Array<{ left: string; right: string }>}
           shuffleKey={activity.id}
+          celebrate={result?.score === 100}
           onChange={(left, right) => {
             const current = (answer.pairs || []) as Array<{ left: string; right: string }>;
             setAnswer({ pairs: [...current.filter((item) => item.left !== left), ...(right ? [{ left, right }] : [])] });
