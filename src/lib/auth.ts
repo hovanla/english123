@@ -1,7 +1,11 @@
 import { Role } from "@prisma/client";
 import { auth } from "../../auth";
+import { headers } from "next/headers";
+import { readMobileUser } from "@/lib/mobile-session";
 
 export async function requireUser() {
+  const authorization = (await headers()).get("authorization");
+  if (authorization) return readMobileUser(authorization);
   const session = await auth();
   if (!session?.user?.id) throw new Response("Bạn cần đăng nhập.", { status: 401 });
   return session.user;
