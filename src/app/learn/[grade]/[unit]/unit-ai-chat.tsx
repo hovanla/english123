@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { startShortAudioRecording, type ShortAudioRecording } from "@/lib/browser-audio";
 import { speakEnglish, startEnglishRecognition } from "@/lib/browser-speech";
+import UnitAiCall from "@/components/unit-ai-call";
 
 type ChatMessage = { role: "user" | "assistant"; content: string; apiContent?: string };
 type Scenario = { activityId: string; title: string; description: string };
@@ -25,6 +26,7 @@ export default function UnitAiChat({
   voiceConfigured: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [interactionMode, setInteractionMode] = useState<"chat" | "call">("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -192,6 +194,10 @@ export default function UnitAiChat({
         Phòng hội thoại chưa hoạt động vì máy chủ chưa có khóa API Groq, NVIDIA hoặc OpenAI.
       </p>}
 
+      <div className="mt-3 flex gap-2" aria-label="Chế độ hội thoại">
+        {(["chat", "call"] as const).map((mode) => <button key={mode} type="button" aria-pressed={interactionMode === mode} disabled={pending || recording || listening} onClick={() => { window.speechSynthesis?.cancel(); setInteractionMode(mode); }} className={`min-h-11 rounded-xl px-4 text-sm font-bold disabled:opacity-40 ${interactionMode === mode ? "bg-violet-700 text-white" : "bg-violet-50 text-violet-900"}`}>{mode === "chat" ? "💬 Nhắn tin" : "☎ Gọi AI"}</button>)}
+      </div>
+      {interactionMode === "call" ? <UnitAiCall unitId={unitId} configured={configured} voiceConfigured={voiceConfigured} scenarios={scenarios}/> : <>
       {scenarios.length > 0 && <div className="mt-4">
         <p className="text-xs font-black uppercase tracking-wider text-violet-700">Chọn tình huống đời thực</p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -233,6 +239,7 @@ export default function UnitAiChat({
         <p className="mt-2 text-xs leading-5 text-slate-500">{voiceConfigured ? "Đoạn ghi âm ngắn được gửi tới Groq Whisper để chuyển thành chữ rồi xóa; English123 không lưu tệp âm thanh." : "Trình duyệt chuyển lời nói thành chữ; English123 không lưu bản ghi âm."}</p>
         {error && <p className="mt-2 text-sm font-bold text-rose-700">{error}</p>}
       </form>
+      </>}
     </div>}
   </section>;
 }
